@@ -1,0 +1,10 @@
+#!/bin/dash
+
+nmapp=$(pidof nm-applet)
+[ -n "$nmapp" ] && killall nm-applet
+
+dwmc restart
+sleep 0.5s
+
+[ -n "$nmapp" ] && { nm-applet & }
+notify-send -t 2500 "dwm is restarted"

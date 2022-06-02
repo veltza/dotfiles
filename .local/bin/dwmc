@@ -1,0 +1,44 @@
+#!/bin/dash
+
+signal() {
+	xsetroot -name "fsignal:$*"
+}
+
+case $# in
+1)
+	case $1 in
+	quit)
+		# kill scratchpads
+		wins=$(wmctrl -l -p -x 2>/dev/null)
+		if [ $? -eq 0 ] && [ -n "$wins" ]; then
+			for instance in spfm.st spterm.st qalculate; do
+				pids=$(printf '%s' "$wins" | awk -v iname="$instance" '$4 ~ iname {print $3}')
+				[ -n "$pids" ] && { for pid in $pids; do kill -TERM "$pid"; done }
+			done
+			sleep 0.2
+		fi
+		signal $1
+		;;
+	restart)
+		signal $1
+		;;
+	*)
+		echo "Unknown command or missing one argument."
+		exit 1
+		;;
+	esac
+	;;
+2)
+	case $1 in
+	*)
+		echo "Unknown command or one too many arguments."
+		exit 1
+		;;
+	esac
+	;;
+*)
+	echo "Too many arguments."
+	exit 1
+	;;
+esac
+

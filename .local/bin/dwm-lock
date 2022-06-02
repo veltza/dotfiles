@@ -1,0 +1,50 @@
+#!/bin/dash
+
+timeout_dim=420     # Dim the screen after inactivity
+timeout_lock=7      # Lock the screen after dimming
+max_brightness=90   # Start fading from this brightness percent
+min_brightness=5    # Fade to this brightness percent
+fade_step_time=0.05 # Time to sleep (in seconds) between fading decrements
+output_port=eDP     # Display
+
+set_brightness() {
+    value="$(($1/100)).$(($1/10%10))$(($1%10))"
+    xrandr --output $output_port --brightness $value
+}
+
+dim() {
+    level=$max_brightness
+    while [ $level -ge $min_brightness ]; do
+        set_brightness $level
+        level=$((level-1))
+        sleep $fade_step_time
+    done
+}
+
+case "${1:-}" in
+    start)
+        xset s $timeout_dim $timeout_lock
+        pidof xss-lock > /dev/null || { xss-lock -n 'dwm-lock dim' -- slock & }
+        pidof xssproxy > /dev/null || { xssproxy & }
+        ;;
+    stop)
+        killall -q xss-lock
+        killall -q xssproxy
+        xset s reset
+        ;;
+    dim)
+        trap 'exit 0' TERM INT
+        trap "colortemp; pkill -P $$ 2> /dev/null" EXIT
+        dim
+        sleep 2147483647 &
+        wait
+        ;;
+    forcelock)
+        if pidof xss-lock > /dev/null; then
+            xset s activate
+        else
+            slock
+        fi
+        ;;
+esac
+

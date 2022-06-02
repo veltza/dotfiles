@@ -1,0 +1,9 @@
+#!/bin/dash
+
+xmenu <<EOF
+∧ Attach Above	2
+» Attach Aside	4
+∨ Attach Below	1
+> Attach Bottom	3
+< Attach Top	0
+EOF

@@ -1,0 +1,18 @@
+#!/bin/dash
+
+xmenu <<EOF
+TTT Bottom Stack Layout	5
+=== Bottom Stack Horizontal Layout	6
+|M| Centered Master Layout	11
+>M> Centered Floating Master Layout	12
+[D] Deck Layout	4
+[\\] Dwindle Layout	3
+><> Floating Layout	13
+::: Gapless Grid Layout	10
+HHH Grid Layout	7
+--- Horizontal Grid Layout	9
+[M] Monocle Layout	1
+### Nrowgrid Layout	8
+[@] Spiral Layout	2
+[]= Tiled Layout	0
+EOF
