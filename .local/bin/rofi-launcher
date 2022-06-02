@@ -1,0 +1,4 @@
+#!/bin/dash
+rofi -show drun -show-icons -terminal st
+#rofi -combi-modi window,drun -show combi -modi combi -show-icons -display-window " Window    " -display-drun "" -display-combi "run"
+

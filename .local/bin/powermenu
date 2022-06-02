@@ -1,0 +1,12 @@
+#!/bin/sh
+
+chosen=$(printf " Cancel\n Shutdown\n Reboot\n⏾ Suspend\n Hibernation\n Logout" | dmenu "$@" -i -p "Power:")
+
+case "$chosen" in
+    " Shutdown") killall -q picom && sleep 0.2; systemctl poweroff -i ;;
+    " Reboot") killall -q picom && sleep 0.2; systemctl reboot -i ;;
+    "⏾ Suspend") systemctl suspend ;;
+    " Hibernation") systemctl hibernate ;;
+    " Logout") exec dwmc quit ;;
+esac
+

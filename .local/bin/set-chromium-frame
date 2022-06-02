@@ -1,0 +1,12 @@
+#!/bin/dash
+
+cd ~/.config/chromium/Default
+
+grep -q '"custom_chrome_frame":true' Preferences && frame="on" || frame="off"
+
+case "$1" in
+  on)  [ $frame = "off" ] && sed -i 's/"custom_chrome_frame":false/"custom_chrome_frame":true/' Preferences ;;
+  off) [ $frame = "on"  ] && sed -i 's/"custom_chrome_frame":true/"custom_chrome_frame":false/' Preferences ;;
+  *) echo "Chromium frame: $frame" ;;
+esac
+

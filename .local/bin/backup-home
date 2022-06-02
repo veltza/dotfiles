@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+# Backup home directories
+# 2022-02-17 VMV
+#
+
+backup_drive='/mnt/backup'
+backup_dir='backups'
+host=$(cat /proc/sys/kernel/hostname)
+
+createtimestampfile() {
+    rm -f "$1/--- Backup"*
+    if [ "${2:-}" = "error" ]; then
+        touch "$1/--- Backup had some errors: $(date '+%F %H:%M') ---"
+    else
+        touch "$1/--- Backup was successful: $(date '+%F %H:%M') ---"
+    fi
+}
+
+# Check for hostname
+if [ -z "$host" ]; then
+    echo "Error: hostname is empty!" >&2
+    exit 1
+fi
+
+# Creating host specific directory
+dest="$backup_drive/$backup_dir/$host"
+mkdir -p "$dest" >/dev/null 2>&1
+
+# Check for backup drive
+if ! ls "$dest" >/dev/null 2>&1; then
+    echo "Error: backup drive is not mounted!" >&2
+    exit 1
+fi
+
+# Check for sudo privileges
+echo "Checking for sudo privileges..."
+if ! sudo ls >/dev/null; then
+    echo "Aborted!" >&2
+    exit 1
+fi
+
+# Backup root config files
+if [ -d "$HOME/.backups/root" ]; then
+    echo "Backing up $HOME/.backups/root to $dest/root ..."
+    if type pacman >/dev/null 2>&1; then
+        sudo pacman -Q > "$HOME/.backups/root/pacman-pkglist.txt"
+    elif type apt >/dev/null 2>&1; then
+        apt list --installed 2> /dev/null > "$HOME/.backups/root/apt-pkglist.txt"
+    fi
+    sudo rsync -aAXH --delete --info=progress2 "$HOME/.backups/root" "$dest"
+    if [ $? -ne 0 ]; then
+        echo "There were errors! Try running the command again to correct them." >&2
+        createtimestampfile "$dest" error
+        exit 1
+    fi
+fi
+
+# Backup home directories
+echo "Backing up /home to $dest/home ..."
+sudo rsync -aAXH --delete --info=progress2 \
+--exclude='/home/*/.backups/' \
+--exclude='/home/*/.cache/' \
+--exclude='/home/*/.local/share/Trash/' \
+--exclude='/home/*/Downloads/' \
+--exclude='/home/*/tmp/' \
+/home "$dest"
+if [ $? -ne 0 ]; then
+    echo "There were errors! Try running the command again to correct them." >&2
+    createtimestampfile "$dest" error
+    exit 1
+fi
+
+createtimestampfile "$dest" success
+
+echo "All backed up!"
+echo "Wait, syncing drives..."
+sync
+echo "done"
+
+echo "Unmounting backup drive..."
+if ! sudo umount "$backup_drive" 2>/dev/null; then
+    echo "Warning: can't unmount backup drive!" >&2
+    exit 1
+fi
+
+echo "done"
+echo "It's safe to remove backup drive now."
+

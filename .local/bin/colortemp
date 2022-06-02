@@ -1,0 +1,13 @@
+#!/bin/dash
+
+#xrandr --output eDP --gamma 1.07:1.0:1.0
+#xrandr --output eDP --gamma 0.97:0.93:0.93
+#xrandr --output eDP --gamma 0.95:0.90:0.90
+#redshift -l 0:0 -r -P -O 6100K > /dev/null
+#redshift -l 0:0 -r -P -O 6100K -g 0.95 >/dev/null ;;
+
+case "${1:-}" in
+    reset) redshift -l 0:0 -r -P -O 6500K >/dev/null ;;
+    *)     redshift -l 0:0 -r -P -O 6000K -g 0.95 -b 0.95 >/dev/null ;;
+esac
+

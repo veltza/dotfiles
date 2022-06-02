@@ -1,0 +1,12 @@
+#!/bin/dash
+# Sets the background. If given an argument, will set file as background.
+
+bg="${XDG_CONFIG_HOME:-$HOME/.config/}/bg"
+
+if [ -n "${1:-}" ]; then
+    img=$(realpath $1)
+    rm -f $bg
+    ln -s $img $bg
+fi
+feh --no-fehbg --bg-fill "$bg"
+

@@ -1,0 +1,2 @@
+#!/bin/dash
+xrandr --output eDP --set TearFree ${1:-on}

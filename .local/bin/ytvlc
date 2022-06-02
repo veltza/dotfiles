@@ -1,0 +1,15 @@
+#!/bin/sh
+# Youtube script for vlc
+# 2022-02-22 VMV
+# 2020-05-31 VMV
+# Usage: ytvlc URL [VIDEOFORMAT]
+
+URL=${1?"Usage: ytvlc URL [VIDEOFORMAT]"}
+VIDEO=${2:-"(137/299/303/bestvideo[height<=720][ext=mp4])"}
+cd ~/Videos/yt
+youtube-dl -f "$VIDEO+bestaudio" -o "%(title)s-%(id)s.mkv" --sub-lang en --write-sub --write-auto-sub --merge-output-format mkv $URL
+if [ $? -eq 0 ] ; then
+  FILE=$(youtube-dl --get-filename -o "%(title)s-%(id)s.mkv" $URL)
+  vlc "$FILE" >/dev/null 2>&1 &
+fi
+

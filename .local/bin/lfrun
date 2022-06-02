@@ -1,0 +1,30 @@
+#!/bin/dash
+set -e
+
+cleanup() {
+    exec 3>&-
+    rm -f "$FIFO_UEBERZUG"
+} 
+
+deleteunusedfifos() {
+    for fifo in "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lf-ueberzug-"*; do
+        pid=${fifo##*lf-ueberzug-}
+        if [ -e "$fifo" ] && [ -n "$pid" ] && ! ps -p "$pid" > /dev/null 2>&1; then
+            rm -f "$fifo"
+        fi
+    done
+    unset fifo pid
+}
+
+if ! type ueberzug > /dev/null 2>&1 || [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+    lf "$@"
+else
+    deleteunusedfifos
+    export FIFO_UEBERZUG="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lf-ueberzug-$$"
+    rm -f "$FIFO_UEBERZUG"
+    mkfifo "$FIFO_UEBERZUG"
+    ueberzug layer -s <"$FIFO_UEBERZUG" -p json &
+    exec 3>"$FIFO_UEBERZUG"
+    trap cleanup EXIT
+    lf "$@" 3>&-
+fi

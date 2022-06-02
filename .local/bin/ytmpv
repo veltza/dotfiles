@@ -1,0 +1,33 @@
+#!/bin/sh
+# Youtube script for mpv
+# 2021-10-09 VMV
+# 2021-04-18 VMV
+# 2020-05-31 VMV
+
+URL=${1:-$(xclip -o)}
+
+if echo $URL | grep -q -E "youtube|youtu.be"; then
+  FS="-fs"
+  ICON="video"
+  TARGET="video"
+  if echo $URL | grep -q -E "list="; then
+    TARGET="list"
+    URL=$(echo $URL | sed "s/\?v=[^&]*&/\?/;s/&v=[^&]*//g")
+  fi
+  FORMAT="(${2:-"137/299/303/bestvideo[height<=720][ext=mp4]"})+bestaudio"
+  FORMAT=$(echo $FORMAT | sed "s/720p60/298/g;s/1080p60/303/g;s/720p/136/g;s/1080p/137/g;")
+elif echo $URL | grep -q -E "twitch.tv"; then
+  #FS="--geometry=84%x100%+0+0"
+  ICON="display"
+  TARGET="twitch stream"
+  FORMAT=${2:-"1080p__source_/[height=1080][fps<40]/[height<=1080][fps<70]/best"}
+fi
+
+if [ -n "$TARGET" ]; then
+  notify-send -t 3000 --icon=$ICON "Playing $TARGET $URL"
+  mpv $FS --ytdl-format="$FORMAT" --ytdl-raw-options="sub-lang=en,write-sub=,write-auto-sub=" "$URL"
+  if [ $? -ne 0 ] ; then
+    notify-send -t 5000 --icon=error "Error: Can't open $TARGET $URL"
+  fi
+fi
+

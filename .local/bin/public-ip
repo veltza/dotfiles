@@ -1,0 +1,5 @@
+#!/bin/sh
+curl https://ipinfo.io/ip ; echo
+#curl https://ipecho.net/plain ; echo
+#curl https://ifconfig.me ; echo
+

@@ -1,0 +1,12 @@
+#!/bin/dash
+
+cd ~/.mozilla/firefox/agylbpjh.default-release
+
+grep -q '"browser.tabs.inTitlebar", 1' prefs.js && bar="on" || bar="off"
+
+case "$1" in
+  on)  [ $bar = "off" ] && sed -i 's/"browser.tabs.inTitlebar", 0/"browser.tabs.inTitlebar", 1/' prefs.js ;;
+  off) [ $bar = "on"  ] && sed -i 's/"browser.tabs.inTitlebar", 1/"browser.tabs.inTitlebar", 0/' prefs.js ;;
+  *) echo "Firefox title bar: $bar" ;;
+esac
+

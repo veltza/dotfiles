@@ -1,0 +1,5 @@
+#!/bin/sh
+sudo modprobe -rfv i2c_hid_acpi
+sudo modprobe -rvf hid_multitouch
+sudo modprobe -v i2c_hid_acpi
+sudo modprobe -v hid_multitouch
