@@ -1,0 +1,6 @@
+#
+# ~/.zprofile
+#
+
+. ~/.profile
+

@@ -1,0 +1,10 @@
+$include /etc/inputrc
+set colored-stats On
+set show-all-if-ambiguous On
+set completion-ignore-case On
+TAB: menu-complete
+"\e[Z": menu-complete-backward  # Shift+Tab
+"\C-h": backward-kill-word      # Ctrl+Backspace
+"\e[M": kill-word               # Ctrl+Delete
+"\e[3;5~": kill-word            # Ctrl+Delete
+
