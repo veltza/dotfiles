@@ -1,0 +1,23 @@
+#!/bin/dash
+
+xsettingsd &
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+. colortemp
+. tearfree
+picom &
+dunst &
+setbg &
+dsblocks &
+dwm-pulsedaemon
+easyeffects --gapplication-service &
+set-chromium-frame off &
+set-firefox-titlebar off &
+dwm-lock start &
+
+while true; do
+  dwm || break
+done
+
+dwm-lock stop
+killall -q xsettingsd picom dunst dsblocks pactl easyeffects
+sleep 0.1

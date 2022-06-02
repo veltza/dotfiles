@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<unique-id>1617816885862980-1</unique-id>
+	<command>cd %f; st</command>
+	<description>Example for a custom action</description>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>system-file-manager</icon>
+	<name>Open Thunar as Root Here</name>
+	<unique-id>1619526840971511-1</unique-id>
+	<command>pkexec thunar %f</command>
+	<description></description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>meld</icon>
+	<name>Compare</name>
+	<unique-id>1619528599268694-1</unique-id>
+	<command>meld %F</command>
+	<description></description>
+	<patterns>*</patterns>
+	<directories/>
+	<other-files/>
+	<text-files/>
+</action>
+<action>
+	<icon>preferences-system-search</icon>
+	<name>Search Files in Folder</name>
+	<unique-id>1620398043116826-1</unique-id>
+	<command>catfish %f</command>
+	<description></description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+</actions>

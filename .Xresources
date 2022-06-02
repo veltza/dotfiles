@@ -1,0 +1,24 @@
+!Xcursor.size:	24
+Xcursor.theme:	capitaine-cursors-light
+Xft.antialias:	1
+Xft.dpi:	96
+Xft.autohint:	0
+Xft.hinting:	1
+Xft.hintstyle:	hintslight
+Xft.lcdfilter:	lcddefault
+Xft.rgba:	rgb
+
+xmenu.font: JetBrainsMono Nerd Font:style=Medium:size=9
+xmenu.background: #222222
+xmenu.foreground: #FFFFFF
+xmenu.selbackground: #3584E4
+xmenu.selforeground: #FFFFFF
+!xmenu.border: #707070
+xmenu.border: #8C8C8C
+xmenu.separator: #CDC7C2
+
+Sxiv.foreground: #FFFFFF
+Sxiv.background: #000000
+!Sxiv.font: Fira Sans:size=10.0
+Sxiv.font: Roboto:size=9.75
+

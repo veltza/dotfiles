@@ -1,0 +1,1049 @@
+# Required tools - lf:
+# 7z
+# ar
+# coreutils
+# cp-p (modified version)
+# dash
+# gunzip
+# tar
+# trash-cli
+# unrar
+# unxz
+# unzip
+# wmctrl
+# bookmenu (optional)
+# dragon-drop (optional) - https://github.com/mwh/dragon
+# fzf (optional)
+# hexedit (optional)
+# xclip (optional)
+#
+# Required tools - previewer:
+# 7z
+# ar
+# catdoc
+# docx2txt
+# glow
+# gunzip
+# mediainfo
+# odt2txt
+# pdftotext
+# tar
+# tree
+# unrar
+# zipinfo
+# bat (optional)
+# chafa (optional)
+# highlight (optional)
+# ueberzug (optional)
+
+# Basic settings
+set autoquit on
+set drawbox on
+set icons on
+set ignorecase on
+set preview on
+set previewer ~/.config/lf/preview
+set cleaner ~/.config/lf/cleaner
+set scrolloff 4
+set tagfmt "\033[33m%s\033[0m"
+
+# Shell settings
+set shell dash
+set shellopts '-eu'
+set ifs "\n"
+
+# Custom Functions
+cmd on-cd &{{
+    # Show current directory in window title
+    case "$PWD" in
+        $HOME) title=$USER ;;
+        $HOME*) title="~${PWD#$HOME}" ;;
+        *) title=$PWD ;;
+    esac
+    printf "\033]0;$title - lf\007" > /dev/tty
+}}
+on-cd
+
+cmd on-quit ${{
+    # Restore window title
+    case "$PWD" in
+        $HOME) title=$USER ;;
+        $HOME*) title="~${PWD#$HOME}" ;;
+        *) title=$PWD ;;
+    esac
+    printf "\033]0;$title\007" > /dev/tty
+    # Restore window title
+    #terminal=$(xprop -id $WINDOWID | grep '^WM_CLASS' | cut -d\" -f2)
+    #case "$terminal" in
+    #    st|st-*) title='st' ;;
+    #    xfce4-*) title='' ;;
+    #    *) title='Terminal' ;;
+    #esac
+    #printf "\033]0;$title\007" > /dev/tty
+}}
+
+cmd open ${{
+    set -f
+    test -L "$f" && f=$(readlink -f "$f")
+    case "$f" in
+        *.md5|*.md5sum) chksum='md5sum';;
+        *.sha256|*.sha256sum) chksum='sha256sum';;
+        *.sha512|*.sha512sum) chksum='sha512sum';;
+        *) chksum='';;
+    esac
+    if [ -n "$chksum" ]; then
+        printf '\nChecking %s checksum(s) ...\n' $chksum
+        set +e; $chksum -c "$f"
+        set -e; printf 'Press enter to continue'; read -r ans
+        exit 0
+    fi
+    case $(file --mime-type "$f" -b) in
+        text/*|application/json|inode/x-empty) $EDITOR "$f";;
+        *) for f in $fx; do setsid xdg-open "$f" > /dev/null 2> /dev/null & done;;
+    esac
+}}
+
+cmd open-with ${{
+    set -f
+    [ $# -le 0 ] && exit 0
+
+    [ "$1" != "sudo" ] && cmd=$1 || eval cmd=\${$#}
+    case "$cmd" in
+        hexedit) for f in $fx; do "$@" "$f"; done ;;
+        mediainfo) "$@" $fx | less ;;
+        nano|nvim|vim) "$@" $fx ;;
+        md5sum|sha256sum|sha512sum) lf -remote "send $id checksum $cmd" ;;
+        sudoedit) lf -remote "send $id $cmd" ;;
+        sudo) ;;
+        *) # Note. pkexec is not working here. I had to use lf -remote hack.
+           [ "$cmd" = "pkexec" ] && [ $# -eq 1 ] && exit 0
+           cmd=$(printf 'setsid %s $fx' "$*" | tr '\n' ' ')
+           lf -remote "send $id &$cmd" ;;
+    esac
+}}
+
+cmd open-config ${{
+    set -f
+    set +e; f=$(bookmenu -b ~/.config/bookmenu/configs -f fzfreverse -o -q)
+    set -e
+    if [ -n "$f" ]; then
+        $EDITOR "$f"
+    fi
+}}
+
+cmd open-new-terminal &{{
+    setsid st -d "$PWD" &
+}}
+
+cmd paste-user &{{
+    if [ ! -e ~/.local/share/lf/files ] || [ "$(wc -l < ~/.local/share/lf/files)" -le 1 ]; then
+        lf -remote "send $id echoerr paste: no file in copy/cut buffer"
+        exit 0
+    fi
+    s=''
+    mode=''
+    while read -r line; do
+        if [ -n "$mode" ] && [ ! -e "$(realpath -- "$line")" ]; then
+            continue
+        fi
+        case "$mode" in
+            copy)
+                if [ ! -r "$(realpath -- "$line")" ]; then
+                    s='sudo'
+                    break
+                fi ;;
+            move)
+                if [ ! -w "$(dirname -- "$(realpath -- "$line")")" ]; then
+                    s='sudo'
+                    break
+                fi ;;
+            *)
+                mode=$line ;;
+        esac
+    done < ~/.local/share/lf/files
+    if [ "$s" = 'sudo' ] || [ ! -w "$PWD" ]; then
+        lf -remote "send $id echoerr paste: cannot $mode file(s): permission denied. Try P command."
+        exit 0
+    fi
+    # modified cp-p is required
+    cp-p --lf-paste $id user
+}}
+
+cmd paste-sudo ${{
+    if [ ! -e ~/.local/share/lf/files ] || [ "$(wc -l < ~/.local/share/lf/files)" -le 1 ]; then
+        lf -remote "send $id echoerr paste: no file in copy/cut buffer"
+        exit 0
+    fi
+    if ! sudo ls >/dev/null; then
+        printf 'Press enter to continue'; read -r ans
+        exit 0
+    fi
+    # modified cp-p is required
+    cp-p --lf-paste $id sudo
+}}
+
+cmd mkdir &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id mkitem \"mkdir -p\" $args"
+}}
+
+cmd mkfile &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id mkitem touch $args"
+}}
+
+cmd sudomkdir &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id mkitem \"sudo mkdir -p\" $args"
+}}
+
+cmd sudomkfile &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id mkitem \"sudo touch\" $args"
+}}
+
+cmd mkitem ${{
+    set -f
+    cmd=$(printf '%s' "$1" | tr ' ' '\n')
+    shift
+    if [ $# -le 0 ]; then
+        lf -remote "send $id echo Aborted!"
+        exit 0
+    fi
+    f=$(printf '%s' "$*" | tr '\n' ' ')
+    s=$(printf '%s' "$f" | sed 's/\\/\\\\/g;s/"/\\"/g');
+    if [ -e "$f" ]; then
+        echo $cmd | grep -q "dir" && m="directory" || m="file"
+        m=$(printf "Cannot create %s '%s': File or directory exists!" "$m" "$s")
+        lf -remote "send $id select \"$s\""
+        lf -remote "send $id echoerr \"$m\""
+        exit 0
+    fi
+    if [ ! -w "$PWD" ] && ! echo $cmd | grep -q "sudo"; then
+        echo $cmd | grep -q "dir" && m="directory" || m="file"
+        m=$(printf "Cannot create %s '%s': Permission denied!" "$m" "$s")
+        lf -remote "send $id echoerr \"$m\""
+        exit 0
+    fi
+    set +e
+    [ -n "${XDG_RUNTIME_DIR:-}" ] && tmpdir=$XDG_RUNTIME_DIR || tmpdir=${TMPDIR:-/tmp}
+    tmp="$(mktemp $tmpdir/lferror.XXXXXXXX)"
+    if $cmd -- $f 2> $tmp; then
+        lf -remote "send reload"
+        lf -remote "send $id select \"$s\""
+    else
+        lf -remote "send $id echoerr $(head -n 1 $tmp)"
+        cat $tmp
+    fi
+    rm $tmp
+    set -e
+}}
+
+cmd chmod &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id chitem chmod $args"
+}}
+
+cmd chown &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id chitem \"sudo chown\" $args"
+}}
+
+cmd sudochmod &{{
+    args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
+    lf -remote "send $id chitem \"sudo chmod\" $args"
+}}
+
+cmd chitem ${{
+    set -f
+    cmd=$(printf '%s' "$1" | tr ' ' '\n')
+    shift
+    if [ $# -le 0 ]; then
+        lf -remote "send $id echo Aborted!"
+        exit 0
+    fi
+    set +e
+    [ -n "${XDG_RUNTIME_DIR:-}" ] && tmpdir=$XDG_RUNTIME_DIR || tmpdir=${TMPDIR:-/tmp}
+    tmp="$(mktemp $tmpdir/lferror.XXXXXXXX)"
+    if $cmd "$@" -- $fx 2> $tmp; then
+        lf -remote "send reload"
+        lf -remote "send $id unselect"
+        lf -remote "send $id echo Done"
+    else
+        lf -remote "send $id echoerr $(head -n 1 $tmp)"
+        cat $tmp
+    fi
+    rm $tmp
+    set -e
+}}
+
+cmd bulkrename ${{
+    set -f
+    [ -n "${XDG_RUNTIME_DIR:-}" ] && tmpdir=$XDG_RUNTIME_DIR || tmpdir=${TMPDIR:-/tmp}
+    old="$(mktemp $tmpdir/lfbr.XXXXXXXX)"
+    new="$(mktemp $tmpdir/lfbr.XXXXXXXX)"
+    if [ -n "$fs" ]; then
+        files='' cwd=1
+        for f in $fs; do
+            fname=$(basename -- "$f")
+            fpath=$(dirname -- "$f")
+            files=$(printf '%s\n%s' "$files" "$fname")
+            [ "$fpath" != "$PWD" ] && cwd=0
+        done
+        [ $cwd -eq 1 ] && fs=${files#?}
+    else
+        set +f
+        for f in *; do
+            [ -e "$f" ] && fs=$(printf '%s\n%s' "$fs" "$f")
+        done
+        fs=$(printf '%s' "${fs#?}" | sort)
+        set -f
+    fi
+    printf '%s\n' "$fs" >"$old"
+    printf '%s\n' "$fs" >"$new"
+    $EDITOR "$new"
+    if [ "$(wc -l < "$new")" -ne "$(wc -l < "$old")" ]; then
+        rm -- "$old" "$new"
+        lf -remote "send $id echoerr Error: Number of lines must stay the same!"
+        exit 0
+    fi
+    paste "$old" "$new" | while IFS= read -r names; do
+        src="$(printf '%s' "$names" | cut -f1)"
+        dst="$(printf '%s' "$names" | cut -f2)"
+        if [ "$src" = "$dst" ] || [ ! -n "$dst" ] || [ -e "$dst" ]; then
+            continue
+        fi
+        mv -- "$src" "$dst"
+    done
+    rm -- "$old" "$new"
+    lf -remote "send reload"
+    lf -remote "send $id unselect"
+}}
+
+cmd trash ${{
+    set -f
+    # Single quotes in a filename can mess up command arguments,
+    # so the last character in last argument should be user input.
+    [ $# -le 0 ] && ans="n" || eval ans=\${$#}
+    ans=${ans#"${ans%?}"}
+    if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+        trash-put -- $fx
+        #lf -remote "send clear"
+        lf -remote "send reload"
+        lf -remote "send $id echo Done" 
+    fi
+}}
+
+cmd trash_put &{{
+    set -f
+    n=$(printf '%s\n' "$fx" | wc -l)
+    if [ $n -eq 1 ]; then
+        fx=$(printf '%s' "$fx" | sed -e "s/ /<space>/g")
+        lf -remote "send $id push :trash<space>'$fx'<space>?<space>[y/N]<space>"
+    else
+        lf -remote "send $id push :trash<space>$n<space>items?<space>[y/N]<space>"
+    fi
+}}
+
+cmd trash_restore ${{
+    set -f
+    if [ $(trash-list | grep -F $PWD | wc -l) -gt 0 ] && [ "$PWD" != "/" ]; then
+        echo "Trash restore"
+        trash-restore
+        lf -remote "send reload"
+    else
+        trash-restore
+        lf -remote "send $id echo No files trashed from current dir."
+    fi
+}}
+
+cmd fzf_jump ${{
+    if [ "$PWD" = "$HOME" ]; then
+        res="$(find . -maxdepth 3 \( -path '*/.git' -o -name '.gitignore' -o -path './.cache' -o -path './.mozilla' -o -path './.thunderbird' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    elif printf '%s' "$PWD" | grep -q $HOME; then
+        res="$(find . \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    else
+        res="$(find . -maxdepth 2 \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    fi
+    [ -d "$res" ] && cmd="cd" || cmd="select"                                                       
+    lf -remote "send $id $cmd \"$res\""
+}}
+
+cmd sudoedit ${{
+    set -f
+    set +e
+    [ -n "${XDG_RUNTIME_DIR:-}" ] && tmpdir=$XDG_RUNTIME_DIR || tmpdir=${TMPDIR:-/tmp}
+    tmp="$(mktemp $tmpdir/lferror.XXXXXXXX)"
+    if ! sudoedit $fx 2> $tmp; then
+        lf -remote "send $id echoerr $(head -n 1 $tmp)"
+        cat $tmp
+    fi
+    rm $tmp
+    set -e
+}}
+
+cmd suedit ${{
+    set -f;
+    sudo $EDITOR $fx
+}}
+
+cmd checksum &{{
+    set -f
+    [ $# -le 0 ] && exit 0
+
+    case "$1" in
+        md5sum) chktype="MD5" ;;
+        sha256sum) chktype="SHA256" ;;
+        sha512sum) chktype="SHA512" ;;
+        *) lf -remote "send $id echoerr Unknown checksum!"
+           exit 0 ;;
+    esac
+    n=$(printf '%s\n' "$fx" | wc -l)
+    if [ $n -eq 1 ]; then
+        [ "$PWD" = "$(dirname -- "$fx")" ] && fx=$(basename -- "$fx")
+        if [ -d "$fx" ]; then
+            s=$(printf "%s: '%s' is a directory" "$chktype" "$fx" | sed 's/\\/\\\\/g;s/"/\\"/g');
+            lf -remote "send $id echo \"$s\""
+        else
+            lf -remote "send $id echo Computing $chktype checksum ..."
+            s=$(printf '%s: %s' "$chktype" "$($1 -- $fx)" | sed 's/"/\\"/g');
+            lf -remote "send $id echo \"$s\""
+        fi
+    else
+        lf -remote "send $id checksums $1 $chktype"
+    fi
+}}
+
+cmd checksums ${{
+    printf '\nComputing %s checksums ...\n' "$2"
+    for f in $fx; do
+        [ "$PWD" = "$(dirname -- "$f")" ] && f=$(basename -- "$f")
+        if [ -d "$f" ]; then
+            printf "'%s' is a directory\n" "$f"
+        else
+            printf '%s\n' "$($1 -- $f)"
+        fi
+    done
+    printf 'Press enter to continue'; read -r ans
+}}
+
+cmd md5 checksum md5sum 
+cmd md5sum md5
+cmd sha256 checksum sha256sum
+cmd sha256sum sha256
+cmd sha512 checksum sha512sum
+cmd sha512sum sha512
+
+cmd unarchive-to &{{
+    set -f
+    [ -d "$f" ] && exit 0
+
+    f=$(basename -- "$f")
+    case "$f" in
+        *.tar.bz|*.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst)
+            f=$(printf '%s' "$f" | sed -e 's/\.tar\.[[:alnum:]]\{2,3\}$//') ;;
+        *.7z|*.gz|*.xz|*.deb|*.iso|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
+            f=$(printf '%s' "$f" | sed -e 's/\.[[:alnum:]]\{2,4\}$//') ;;
+        *)  lf -remote "send $id echoerr Unsupported format!"
+            exit 0 ;;
+    esac
+    f=$(printf '%s' "$f" | sed -e "s/ /<space>/g")
+    lf -remote "send $id push :unarchive<space>current<space>file<space>into<space>directory:<space>$f"
+}}
+
+cmd unarchive-here &{{
+    set -f
+    [ -d "$f" ] && exit 0
+
+    f=$(basename -- "$f")
+    case "$f" in
+        *.tar.bz|*.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst) ;;
+        *.7z|*.gz|*.xz|*.deb|*.iso|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip) ;;
+        *) lf -remote "send $id echoerr Unsupported format!"
+           exit 0 ;;
+    esac
+    lf -remote "send $id push :unarchive<space>current<space>file<space>here?<space>[Y/n]<space>"
+}}
+
+cmd unarchive ${{
+    set -f
+    if [ $# -lt 4 ]; then
+        lf -remote "send $id echo Aborted!"
+        exit 0
+    elif [ "$4" = "[Y/n]" ]; then
+        [ $# -lt 5 ] && ans="y" || ans=$5
+        [ "$ans" != "y" ] && [ "$ans" != "Y" ] && exit 0
+        targetdir="."
+    elif [ $# -lt 5 ]; then
+        lf -remote "send $id echo Aborted!"
+        exit 0
+    else
+        shift 4
+        targetdir=$(printf '%s' "$*" | tr '\n' ' ')
+        mkdir -p -- $targetdir
+    fi
+    oldfiles=$(ls --group-directories-first)
+    case "$f" in
+        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f -C $targetdir ;;
+        *.tar.gz|*.tgz) tar xzvf $f -C $targetdir ;;
+        *.tar.xz|*.txz) tar xJvf $f -C $targetdir ;;
+        *.tar.zst|*.tzst) tar -I zstd -xvf $f -C $targetdir ;;
+        *.tar) tar xvf $f -C $targetdir ;;
+        *.zip) unzip $f -d $targetdir ;;
+        *.rar) unrar x $f $targetdir ;;
+        *.7z|*.iso) 7z x $f -o$targetdir ;;
+        *.deb) cd -- $targetdir; ar xv $f; cd - >/dev/null ;;
+        *.gz|*.xz)
+            if [ "$targetdir" != "." ]; then
+                cp -- $f $targetdir
+                cd -- $targetdir
+                f=$(basename -- "$f")
+            fi
+            case "$f" in
+                *.gz) gunzip -- $f ;;
+                *) unxz -- $f ;;
+            esac ;;
+        *) lf -remote "send $id echoerr Unsupported format!"
+           exit 0;;
+    esac
+    lf -remote "send reload"
+    lf -remote "send $id unselect"
+    if [ "$targetdir" != "." ]; then
+        # Select the target directory
+        targetdir=$(realpath -- $targetdir)
+        targetdir=$(printf '%s' "$targetdir" | sed 's/\\/\\\\/g;s/"/\\"/g');
+        lf -remote "send $id select \"$targetdir\""
+    else
+        # Toggle extracted files and dirs and select the first item
+        count=0
+        for n in $(ls --group-directories-first); do
+            for o in $oldfiles; do
+                [ "$n" = "$o" ] && break
+            done
+            if [ "$n" != "$o" ]; then
+                count=$(($count+1))
+                n=$(printf '%s' "$n" | sed 's/\\/\\\\/g;s/"/\\"/g');
+                lf -remote "send $id toggle \"$n\""
+                [ $count -eq 1 ] && lf -remote "send $id select \"$n\""
+            fi
+        done
+        [ $count -eq 1 ] && lf -remote "send $id unselect"
+    fi
+    lf -remote "send $id echo Done"
+}}
+
+# Compress files using relative mode
+cmd compress ${{
+    set -f
+    # get compression format
+    ext=$1
+    verbose='v'  # v or empty
+    case "$ext" in
+        tar)     taropt="-${verbose}cf" ;;
+        tar.gz)  taropt="-${verbose}zcf" ;;
+        tar.xz)  taropt="-${verbose}Jcf" ;;
+        tar.zst) taropt="-$(printf 'I\nzstd\n-%scf' "$verbose")" ;;
+	    zip)     taropt='' ;;
+        *) lf -remote "send $id echoerr Unknown compression format!"
+           exit 0 ;;
+    esac
+
+    # convert absolute paths to relative paths
+    pwdsed=$(printf '%s' "$PWD/" | sed -e 's/[]\/$*.^[]/\\&/g')
+    files=$(printf '%s' "$fx" | sed -e "s/^$pwdsed//")
+
+    printf '\n-------------------------------'
+    printf '\nSelected object(s):\n'
+    err=0
+    for f in $files; do
+        printf '%s' "$f"
+        case "$f" in
+            '/'*) printf ' (*)\n'; err=1 ;;
+            *)    printf '\n' ;;
+        esac
+    done
+    printf '\n'
+
+    if [ "$err" -gt 0 ]; then
+        printf "Error: (*) Some objects can't be found in current working directory or its subdirectories.\n"
+        printf 'Check objects or try absolute mode: '
+        case "$ext" in
+            tar)     printf 'aT\n' ;;
+            tar.gz)  printf 'aG\n' ;;
+            tar.xz)  printf 'aX\n' ;;
+            tar.zst) printf 'aS\n' ;;
+            *)       printf 'aZ\n' ;;
+        esac
+        printf 'Press enter to continue'
+        read -r ans
+        exit 0
+    fi
+
+    # read archive name
+    while true; do
+        printf 'Archive name (without .%s): ' $ext
+        read -r aname
+        aname=$(printf '%s' "$aname" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        case "$aname" in
+            *'<'*|*'>'*|*'|'*|*'\'*|*'*'*)
+                printf 'Invalid archive name! Do not use characters: <, >, |, \\, *\n\n'
+                ;;
+            '') lf -remote "send $id echo Aborted!"
+                exit 0
+                ;;
+            *) break ;;
+        esac
+    done
+
+    # read directory name
+    while true; do
+        printf 'Directory in archive: '
+        read -r adir
+        adir=$(printf '%s' "$adir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        case "$adir" in
+            *'<'*|*'>'*|*'|'*|*'\'*|*'*'*)
+                printf 'Invalid directory name! Do not use characters: <, >, |, \\, *\n\n'
+                ;;
+            '/'*)
+                printf 'Invalid directory name! Do not use absolute paths!\n\n'
+                ;;
+            '../'*)
+                printf 'Invalid directory name! Do not use parent directory!\n\n'
+                ;;
+            '.'|'..')
+                printf 'Invalid directory name!\n\n'
+                ;;
+            ''|*'/')
+                break ;;
+            *)  adir="$adir/";
+                break ;;
+        esac
+    done
+    adirsed=$(printf '%s' "$adir" | sed -e 's/[\/&]/\\&/g')
+
+    # check if archive already exists
+    if [ -f "$aname.$ext" ]; then
+        printf "Archive $aname.$ext already exists. Update archive? [y/N] "
+        read -r ans
+        if [ "$ans" != "y" ] && [ "$ans" != "Y" ]; then
+            lf -remote "send $id echo Aborted!"
+            exit 0
+        fi
+        # check if tar archive already exists and format is tar.*
+        if [ -f "$aname.tar" ] && [ "$ext" != "tar" ] && [ "$ext" != "zip" ]; then
+            printf "Error: Can't compress archive $aname.$ext, because archive $aname.tar exists!\n"
+            printf 'Press enter to continue'
+            read -r ans
+            exit 0
+        fi
+        # tar.* must be uncompressed before update
+        case "$ext" in
+            tar.gz) gunzip -- $aname.$ext ;;
+            tar.xz) xz -d -- $aname.$ext ;;
+            tar.zst) zstd -d -q --rm -- $aname.$ext ;;
+            *) ;;
+        esac
+        if [ "$ext" != "zip" ]; then
+            # delete old files, because newer files don't replace old files,
+            # but instead are appended to the end of archive
+            set +e
+            oldfiles=$(printf '%s' "$fx" | sed -e "s/^$pwdsed/$adirsed/")
+            tar f $aname.tar --delete -- $oldfiles 2> /dev/null
+            set -e
+            taropt="-${verbose}uf"
+        fi
+    fi
+
+    printf "Compressing $aname.$ext ...\n"
+
+    if [ "$ext" = "zip" ]; then
+        # create/update zip archive
+        [ -n "$verbose" ] && quiet='' || quiet='-q'
+        if [ -n "$adir" ]; then
+            tmp=$(mktemp -d) || exit 1
+            mkdir -p $tmp/$adir
+            cp -a --parents $files $tmp/$adir
+            workdir=$PWD
+            cd $tmp
+            zip -r $quiet $workdir/$aname.$ext $adir
+            cd $workdir
+            rm -rf $tmp
+        else
+            zip -r $quiet $aname.$ext -- $files
+        fi
+    elif [ "$taropt" = "-${verbose}uf" ]; then
+        # update tar or tar.* archive
+        tar $taropt $aname.tar --absolute-names --transform="s/^$pwdsed/$adirsed/S" -- $fx
+        case "$ext" in
+            tar.gz) gzip -- $aname.tar ;;
+            tar.xz) xz -z -- $aname.tar ;;
+            tar.zst) zstd -z -q --rm -- $aname.tar ;;
+            *) ;;
+        esac
+    else
+        # create tar or tar.* archive
+        tar $taropt $aname.$ext --absolute-names --transform="s/^$pwdsed/$adirsed/S" -- $fx
+    fi
+
+    aname=$(printf '%s' "$aname" | sed 's/\\/\\\\/g;s/"/\\"/g');
+    lf -remote "send reload"
+    lf -remote "send $id unselect"
+    lf -remote "send $id select \"$aname.$ext\""
+
+    printf 'Done\n\nPress enter to continue'
+    read -r ans
+}}
+
+# Compress files using absolute mode
+cmd acompress ${{
+    set -f
+    # get compression format
+    ext=$1
+    verbose='v'  # v or empty
+    case "$ext" in
+        tar)     taropt="-${verbose}cf" ;;
+        tar.gz)  taropt="-${verbose}cf" ;;
+        tar.xz)  taropt="-${verbose}cf" ;;
+        tar.zst) taropt="-${verbose}cf" ;;
+	    zip)     taropt='' ;;
+        *) lf -remote "send $id echoerr Unknown compression format!"
+           exit 0 ;;
+    esac
+
+    printf '\n-------------------------------'
+    printf '\nSelected object(s):\n'
+    for f in $fx; do
+        printf '%s\n' "$f"
+    done
+    printf '\n'
+
+    # read archive name
+    while true; do
+        printf 'Archive name (without .%s): ' $ext
+        read -r aname
+        aname=$(printf '%s' "$aname" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        case "$aname" in
+            *'<'*|*'>'*|*'|'*|*'\'*|*'*'*)
+                printf 'Invalid archive name! Do not use characters: <, >, |, \\, *\n\n'
+                ;;
+            '') lf -remote "send $id echo Aborted!"
+                exit 0
+                ;;
+            *) break ;;
+        esac
+    done
+
+    # read directory name
+    while true; do
+        printf 'Directory in archive: '
+        read -r adir
+        adir=$(printf '%s' "$adir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        case "$adir" in
+            *'<'*|*'>'*|*'|'*|*'\'*|*'*'*)
+                printf 'Invalid directory name! Do not use characters: <, >, |, \\, *\n\n'
+                ;;
+            '/'*)
+                printf 'Invalid directory name! Do not use absolute paths!\n\n'
+                ;;
+            '../'*)
+                printf 'Invalid directory name! Do not use parent directory!\n\n'
+                ;;
+            '.'|'..')
+                printf 'Invalid directory name!\n\n'
+                ;;
+            ''|*'/')
+                break ;;
+            *)  adir="$adir/";
+                break ;;
+        esac
+    done
+    adirsed=$(printf '%s' "$adir" | sed -e 's/[\/&]/\\&/g')
+
+    # check if tar archive already exists and format is tar.*
+    if [ -f "$aname.tar" ] && [ "$ext" != "tar" ] && [ "$ext" != "zip" ]; then
+        printf "Error: Can't compress archive $aname.$ext, because archive $aname.tar exists!\n"
+        printf 'Press enter to continue'
+        read -r ans
+        exit 0
+    fi
+
+    # check if archive already exists
+    if [ -f "$aname.$ext" ]; then
+        printf "Archive $aname.$ext already exists. Update archive? [y/N] "
+        read -r ans
+        if [ "$ans" != "y" ] && [ "$ans" != "Y" ]; then
+            lf -remote "send $id echo Aborted!"
+            exit 0
+        fi
+        # tar.* must be uncompressed before update
+        case "$ext" in
+            tar.gz) gunzip -- $aname.$ext ;;
+            tar.xz) xz -d -- $aname.$ext ;;
+            tar.zst) zstd -d -q --rm -- $aname.$ext ;;
+            *) ;;
+        esac
+        taropt="-${verbose}uf"
+    fi
+
+    printf "Compressing $aname.$ext ...\n"
+
+    if [ "$ext" != "zip" ] || [ "$adir" = '' ]; then
+        # create/update tar file or zip file without adir
+        workdir=$PWD
+        for f in $fx; do
+            fname=$(basename -- "$f")
+            cd $(dirname -- "$f")
+            if [ "$ext" != "zip" ]; then
+                if [ "$taropt" = "-${verbose}uf" ]; then
+                    # delete old files, because newer files don't replace old files,
+                    # but instead are appended to the end of archive
+                    set +e
+                    oldfile=$(printf '%s' "$fname" | sed -e "s/^/$adirsed/")
+                    tar f $workdir/$aname.tar --delete -- $oldfile 2> /dev/null
+                    set -e
+                fi
+                tar $taropt $workdir/$aname.tar --absolute-names --transform="s/^/$adirsed/S" -- $fname
+                taropt="-${verbose}uf"
+            else
+                [ -n "$verbose" ] && quiet='' || quiet='-q'
+                zip -r $quiet $workdir/$aname.$ext -- $fname
+            fi
+        done
+        cd $workdir
+        case "$ext" in
+            tar.gz) gzip -- $aname.tar ;;
+            tar.xz) xz -z -- $aname.tar ;;
+            tar.zst) zstd -z -q --rm -- $aname.tar ;;
+            *) ;;
+        esac
+    else
+        # create/update zip file with adir
+        [ -n "$verbose" ] && quiet='' || quiet='-q'
+        tmp=$(mktemp -d) || exit 1
+        mkdir -p $tmp/$adir
+        cp -a $fx $tmp/$adir
+        workdir=$PWD
+        cd $tmp
+        zip -r $quiet $workdir/$aname.$ext $adir
+        cd $workdir
+        rm -rf $tmp
+    fi
+
+    aname=$(printf '%s' "$aname" | sed 's/\\/\\\\/g;s/"/\\"/g');
+    lf -remote "send reload"
+    lf -remote "send $id unselect"
+    lf -remote "send $id select \"$aname.$ext\""
+
+    printf 'Done\n\nPress enter to continue'
+    read -r ans
+}}
+
+cmd dragon-all &dragon-drop -a -x $fx
+cmd dragon-stay &dragon-drop $fx
+cmd dragon-individual &dragon-drop -x $f
+
+cmd dragon-receive ${{
+    set -f
+    printf '\nWaiting url(s) or file(s) ...'
+    set +e
+    urls=$(dragon-drop -t -x)
+    set -e
+    wmctrl -i -a $WINDOWID # focus window
+    printf '\n'
+    last=''
+    for url in $urls; do
+        case "$url" in
+            file://*)
+                url=${url#file://}
+                url=$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$url")
+                urltype='File'
+                ;;
+            *)  urltype='Url'
+                ;;
+        esac
+        name=$(basename -- "$url")
+        printf '%s: %s\n' "$urltype" "$url"
+        while true; do
+            printf 'Save as [%s]: ' "$name"
+            read -r ans
+            [ -n "$ans" ] && name=$ans
+            if [ -e "$name" ]; then
+                printf "File already exists, overwrite? [y|N] "
+                read -r ans
+                if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+                    break
+                fi
+            else
+                break
+            fi
+        done
+        if [ "$urltype" = "File" ]; then
+            printf "Copy or move the file? [C|m] "
+            read -r ans
+            if [ "$ans" = "m" ] || [ "$ans" = "M" ]; then
+                mv -- "$url" "$name"
+            else
+                cp -- "$url" "$name"
+            fi
+        else
+            curl -o "$name" "$url"
+        fi
+        last=$(printf '%s' "$name" | sed 's/\\/\\\\/g;s/"/\\"/g');
+    done
+    if [ -n "$last" ]; then
+        lf -remote "send reload"
+        lf -remote "send $id select \"$last\""
+    fi
+}}
+
+cmd download-file ${{
+    set -f
+    set +e
+    url=$(xclip -o -selection clipboard)
+    set -e
+    case "$url" in
+        http://*|https://*|ftp://*)
+            ;;
+        *) lf -remote "send $id echoerr Error: Can't fetch a download link from the clipboard!"
+           exit 0
+           ;;
+    esac
+    name=$(basename -- "$url")
+    printf '\nDownload link: %s\n' "$url"
+    while true; do
+        printf 'Save as [%s]: ' "$name"
+        read -r ans
+        [ -n "$ans" ] && name=$ans
+        if [ -e "$name" ]; then
+            printf "File already exists, overwrite? [y|N] "
+            read -r ans
+            if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+                break
+            fi
+        else
+            break
+        fi
+    done
+    curl -o "$name" "$url"
+    name=$(printf '%s' "$name" | sed 's/\\/\\\\/g;s/"/\\"/g');
+    lf -remote "send reload"
+    lf -remote "send $id select \"$name\""
+}}
+
+cmd dotadd ${{
+    set +e
+    printf '\n\n'
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME add $fx
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME status
+    printf 'Press enter to continue'; read -r ans
+    set -e
+}}
+
+cmd dotrm ${{
+    set +e
+    printf '\n\n'
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME restore --staged $fx
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME status
+    printf 'Press enter to continue'; read -r ans
+    set -e
+}}
+
+cmd dotstat ${{
+    set +e
+    printf '\n\n'
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME status
+    printf 'Press enter to continue'; read -r ans
+    set -e
+}}
+
+cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
+cmd sudorm $sudo rm -r -i -- $fx
+
+# Remove some defaults
+map c
+map m
+map t
+map J
+map K
+
+# Basic Functions
+map q :on-quit; quit
+map . set hidden!
+map R delete
+map D trash_put
+map <a-d> trash_restore
+map <enter> open
+map C clear
+map U unselect
+map * mark-remove
+map cc clear
+map J push 5j
+map K push 5k
+map , find-next
+map ; find-prev
+map i $set -f; LESSOPEN='| ~/.config/lf/preview %s 0 0 0 0 verbose' less -R $f
+map I open-with sxiv
+map <a-m> mark-save
+map mm mark-save
+map md push :mkdir<space>
+map mf push :mkfile<space>
+map msd push :sudomkdir<space>
+map msf push :sudomkfile<space>
+map cd push :cd<space>
+map cm push :chmod<space>
+map co push :chown<space>
+map csm push :sudochmod<space>
+map o push :open-with<space>
+map O push :open-with<space>pkexec<space>
+map p paste-user
+map P paste-sudo
+map <a-p> paste
+map <c-o> open-new-terminal
+map <a-c> fzf_jump
+map bc open-config
+map br bulkrename
+map e $set -f; if [ "$EDITOR" = "vim" ] || [ "$EDITOR" = "nvim" ]; then $EDITOR -p $fx; else $EDITOR $fx; fi
+map E sudoedit
+map <a-e> suedit
+map spd :set nopreview
+map spe :set preview on
+map sr1 :set nopreview; set ratios 1
+map sr2 :set ratios 2:3; set preview on
+map sr3 :set ratios 1:2:3; set preview on 
+map sr4 :set ratios 1:2:3:5; set preview on
+map T tag-toggle
+map ta dragon-all
+map ts dragon-stay
+map ti dragon-individual
+map tr dragon-receive
+map td download-file
+
+# Archive Mappings
+map at compress tar
+map ag compress tar.gz
+map ax compress tar.xz
+map as compress tar.zst
+map az compress zip
+map aT acompress tar
+map aG acompress tar.gz
+map aX acompress tar.xz
+map aS acompress tar.zst
+map aZ acompress zip
+map au unarchive-to
+map aU unarchive-here
+
+# Movement
+map gc cd ~/code
+map gd cd ~/Documents
+map gD cd ~/Downloads
+map gm cd ~/Music
+map gp cd ~/Pictures
+map gv cd ~/Videos
+map g.b cd ~/.backups
+map g.c cd ~/.config
+map g.d cd ~/.dwm
+map g.l cd ~/.local
+map gtr cd ~/.local/share/Trash/files
+
+%[ $LF_LEVEL -eq 1 ] || echo "Warning: You're in a nested lf instance!"
+

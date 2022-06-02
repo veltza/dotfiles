@@ -1,0 +1,87 @@
+#!/bin/dash
+
+[ "$6" = "verbose" ] && verbose='v' || verbose=''
+
+if [ -d "$1" ]; then
+    tree -aC "$1"
+    exit 0
+fi
+
+viewmediainfo() {
+    if [ -n "$verbose" ]; then
+        mediainfo "$1"
+    else
+        mediainfo "$1" | sed -E 's/^(.{25})([^:]*): (.+)/\1 : \3/'
+    fi
+}
+
+image() {
+    if [ -n "$verbose" ]; then
+        viewmediainfo "$1"
+    elif [ -n "$FIFO_UEBERZUG" ] && [ -z "$6" ]; then
+        printf '{"action": "add", "identifier": "PREVIEW", "x": "%s", "y": "%s", "width": "%s", "height": "%s", "scaler": "contain", "path": "%s"}\n' "$4" "$5" "$(($2-1))" "$(($3-1))" "$1" > "$FIFO_UEBERZUG"
+        exit 1
+    elif type chafa > /dev/null 2>&1; then
+        [ -n "${TMUX:-}" ] && c=240 || c=full
+        [ "$2" -le 0 ] && w=$(tput cols) || w=$(($2-4))
+        [ "$3" -le 0 ] && h=$(($(tput lines)-1)) || h=$3
+        chafa -c $c -s ${w}x${h} "$1"
+    else
+        viewmediainfo "$1"
+    fi
+}
+
+batorcat() {
+    if type bat > /dev/null 2>&1; then
+        [ -n "$verbose" ] && w='auto' || w='never'
+        bat -pp -f --wrap=$w "$1"
+    elif type highlight > /dev/null 2>&1; then
+        highlight -O ansi "$1" 2>/dev/null || cat "$1"
+    else
+        cat "$1"
+    fi
+}
+
+case "$1" in
+    *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.webp)
+        image "$1" "$2" "$3" "$4" "$5" ;;
+    *.svg|*.xpm)
+        image "$1" "$2" "$3" "$4" "$5" chafa ;;
+    *.tiff)
+        viewmediainfo "$1" ;;
+    *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
+        viewmediainfo "$1" ;;
+    *.pdf)
+        pdftotext "$1" - ;;
+    *.odt|*.ods|*.odp|*.sxw)
+        odt2txt "$1" ;;
+    *.doc)
+        catdoc "$1" ;;
+    *.docx)
+        docx2txt "$1" - ;;
+    *.[1-8])
+        man "$1" | col -b ;;
+    *.o)
+        nm "$1" ;;
+    *.md)
+        glow -s dark "$1" ;;
+    *.tar.zst|*.tzst)
+        tar -I zstd -t${verbose}f "$1" ;;
+    *.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz)
+        tar -t${verbose}f "$1" ;;
+    *.zip)
+        [ -n "$verbose" ] && zipinfo "$1" || zipinfo -1 "$1" ;;
+    *.rar)
+        [ -n "$verbose" ] && unrar l "$1" || unrar lb "$1" ;;
+    *.gz)
+        [ -n "$verbose" ] && gunzip -l -v "$1" || gunzip -l "$1" ;;
+    *.7z)
+        7z l "$1" ;;
+    *.iso)
+        7z l "$1" ;;
+    *.deb)
+        ar t${verbose} "$1" ;;
+    *)
+        batorcat "$1" ;;
+esac
+
