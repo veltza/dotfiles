@@ -15,8 +15,13 @@ autoload add-zsh-hook
 add-zsh-hook chpwd update_terminal_cwd
 
 # Set up the prompt
-autoload -U colors && colors    # Load colors
-PS1="%B%{$fg[green]%}%n%{$fg[green]%}@%{$fg[green]%}%M%{$fg[white]%}:%{$fg[blue]%}%~%{$reset_color%}%#%b "
+autoload -U colors && colors            # Load colors
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:git*' formats " %{$fg[yellow]%}%  %b"
+setopt prompt_subst
+prompt='%B%{$fg[green]%}%n%{$fg[green]%}@%{$fg[green]%}%M%{$fg[white]%}:%{$fg[blue]%}%~${vcs_info_msg_0_}%{$reset_color%}%#%b '
 
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -e
