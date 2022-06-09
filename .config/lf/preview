@@ -45,7 +45,7 @@ batorcat() {
 case "$1" in
     *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.webp)
         image "$1" "$2" "$3" "$4" "$5" ;;
-    *.svg|*.xpm)
+    *.six|*.svg|*.xpm)
         image "$1" "$2" "$3" "$4" "$5" chafa ;;
     *.tiff)
         viewmediainfo "$1" ;;
