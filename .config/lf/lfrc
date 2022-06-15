@@ -2,7 +2,6 @@
 # 7z
 # ar
 # coreutils
-# cp-p (modified version)
 # dash
 # gunzip
 # tar
@@ -10,11 +9,11 @@
 # unrar
 # unxz
 # unzip
-# wmctrl
-# bookmenu (optional)
+# bookmenu (optional) - https://github.com/BrodieRobertson/bookmenu
 # dragon-drop (optional) - https://github.com/mwh/dragon
 # fzf (optional)
 # hexedit (optional)
+# wmctrl (optional)
 # xclip (optional)
 #
 # Required tools - previewer:
@@ -135,12 +134,12 @@ cmd open-new-terminal &{{
     setsid st -d "$PWD" &
 }}
 
-cmd paste-user &{{
+cmd paste-safe &{{
     if [ ! -e ~/.local/share/lf/files ] || [ "$(wc -l < ~/.local/share/lf/files)" -le 1 ]; then
         lf -remote "send $id echoerr paste: no file in copy/cut buffer"
         exit 0
     fi
-    s=''
+    perm=''
     mode=''
     while read -r line; do
         if [ -n "$mode" ] && [ ! -e "$(realpath -- "$line")" ]; then
@@ -149,37 +148,23 @@ cmd paste-user &{{
         case "$mode" in
             copy)
                 if [ ! -r "$(realpath -- "$line")" ]; then
-                    s='sudo'
+                    perm='sudo'
                     break
                 fi ;;
             move)
                 if [ ! -w "$(dirname -- "$(realpath -- "$line")")" ]; then
-                    s='sudo'
+                    perm='sudo'
                     break
                 fi ;;
             *)
                 mode=$line ;;
         esac
     done < ~/.local/share/lf/files
-    if [ "$s" = 'sudo' ] || [ ! -w "$PWD" ]; then
-        lf -remote "send $id echoerr paste: cannot $mode file(s): permission denied. Try P command."
+    if [ "$perm" = 'sudo' ] || [ ! -w "$PWD" ]; then
+        lf -remote "send $id echoerr paste: cannot $mode file(s): permission denied"
         exit 0
     fi
-    # modified cp-p is required
-    cp-p --lf-paste $id user
-}}
-
-cmd paste-sudo ${{
-    if [ ! -e ~/.local/share/lf/files ] || [ "$(wc -l < ~/.local/share/lf/files)" -le 1 ]; then
-        lf -remote "send $id echoerr paste: no file in copy/cut buffer"
-        exit 0
-    fi
-    if ! sudo ls >/dev/null; then
-        printf 'Press enter to continue'; read -r ans
-        exit 0
-    fi
-    # modified cp-p is required
-    cp-p --lf-paste $id sudo
+    lf -remote "send $id paste"
 }}
 
 cmd mkdir &{{
@@ -847,8 +832,8 @@ cmd dragon-receive ${{
     printf '\nWaiting url(s) or file(s) ...'
     set +e
     urls=$(dragon-drop -t -x)
+    wmctrl -i -a $WINDOWID  # focus window
     set -e
-    wmctrl -i -a $WINDOWID # focus window
     printf '\n'
     last=''
     for url in $urls; do
@@ -957,6 +942,7 @@ cmd dotstat ${{
 }}
 
 cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
+cmd sudolf $sudo -E lf
 cmd sudorm $sudo rm -r -i -- $fx
 
 # Remove some defaults
@@ -995,8 +981,7 @@ map co push :chown<space>
 map csm push :sudochmod<space>
 map o push :open-with<space>
 map O push :open-with<space>pkexec<space>
-map p paste-user
-map P paste-sudo
+map p paste-safe
 map <a-p> paste
 map <c-o> open-new-terminal
 map <a-c> fzf_jump
