@@ -1,7 +1,7 @@
-#!/bin/dash
+#!/usr/bin/env bash
 
-timeout_dim=420     # Dim the screen after inactivity
-timeout_lock=7      # Lock the screen after dimming
+timeout_dim=420     # Dim the screen after inactivity (sec)
+timeout_lock=7      # Lock the screen after dimming (sec)
 max_brightness=90   # Start fading from this brightness percent
 min_brightness=5    # Fade to this brightness percent
 fade_step_time=0.05 # Time to sleep (in seconds) between fading decrements
@@ -47,4 +47,3 @@ case "${1:-}" in
         fi
         ;;
 esac
-
