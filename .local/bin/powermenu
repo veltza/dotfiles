@@ -7,6 +7,6 @@ case "$chosen" in
     " Reboot") killall -q picom && sleep 0.2; systemctl reboot -i ;;
     "⏾ Suspend") systemctl suspend ;;
     " Hibernation") systemctl hibernate ;;
-    " Logout") exec dwmc quit ;;
+    " Logout") exec dwm-signal quit ;;
 esac
 
