@@ -14,7 +14,7 @@ deletecachefiles() {
             rm -rf "$dir"
         fi
     done
-    unset cachedir
+    unset cachedir pid
 }
 
 if ! type ueberzug > /dev/null 2>&1 || [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
