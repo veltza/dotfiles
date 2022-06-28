@@ -3,25 +3,28 @@ set -e
 
 cleanup() {
     exec 3>&-
-    rm -f "$FIFO_UEBERZUG"
+    rm -rf "${FIFO_UEBERZUG%/fifo}"
 } 
 
-deleteunusedfifos() {
-    for fifo in "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lf-ueberzug-"*; do
-        pid=${fifo##*lf-ueberzug-}
-        if [ -e "$fifo" ] && [ -n "$pid" ] && ! ps -p "$pid" > /dev/null 2>&1; then
-            rm -f "$fifo"
+deletecachefiles() {
+    cachedir=${FIFO_UEBERZUG%/*/fifo}
+    for dir in "${cachedir}/"*; do
+        pid=$(basename "$dir")
+        if [ -e "$dir" ] && ! ps -p "$pid" > /dev/null 2>&1; then
+            rm -rf "$dir"
         fi
     done
-    unset fifo pid
+    unset cachedir
 }
 
 if ! type ueberzug > /dev/null 2>&1 || [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+    unset FIFO_UEBERZUG
     lf "$@"
 else
-    deleteunusedfifos
-    export FIFO_UEBERZUG="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lf-ueberzug-$$"
-    rm -f "$FIFO_UEBERZUG"
+    export FIFO_UEBERZUG="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lf-ueberzug-cache/$$/fifo"
+    deletecachefiles
+    rm -rf "${FIFO_UEBERZUG%/fifo}"
+    mkdir -p "${FIFO_UEBERZUG%/fifo}"
     mkfifo "$FIFO_UEBERZUG"
     ueberzug layer -s <"$FIFO_UEBERZUG" -p json &
     exec 3>"$FIFO_UEBERZUG"

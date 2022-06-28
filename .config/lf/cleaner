@@ -1,4 +1,7 @@
 #!/bin/dash
 if [ -n "$FIFO_UEBERZUG" ]; then
     printf '{"action": "remove", "identifier": "PREVIEW"}\n' > "$FIFO_UEBERZUG"
+    iname=$(basename "$1")
+    cachefile="${FIFO_UEBERZUG%/fifo}/image-${iname%.*}.jpg"
+    [ -e "$cachefile" ] && rm -f "$cachefile"
 fi

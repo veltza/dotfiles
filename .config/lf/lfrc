@@ -20,6 +20,7 @@
 # 7z
 # ar
 # catdoc
+# convert
 # docx2txt
 # glow
 # gunzip
@@ -1031,4 +1032,3 @@ map g.l cd ~/.local
 map gtr cd ~/.local/share/Trash/files
 
 %[ $LF_LEVEL -eq 1 ] || echo "Warning: You're in a nested lf instance!"
-
