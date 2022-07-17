@@ -73,3 +73,13 @@ tm () {
     fi
 }
 
+# Run the system update in a tmux session
+update () {
+    if [ -n "${TMUX:-}" ]; then
+        yay
+    elif tmux has-session -t 'Update' 2> /dev/null; then
+        tmux attach-session -t 'Update' \; new-window \; send-keys 'yay' C-m
+    else
+        tmux new-session -s 'Update' \; send-keys 'yay' C-m
+    fi
+}

@@ -22,3 +22,7 @@ Sxiv.background: #000000
 !Sxiv.font: Fira Sans:size=10.0
 Sxiv.font: Roboto:size=9.75
 
+dmenu.foreground: #D0E5E8
+dmenu.background: #07070d
+dmenu.selforeground: #E5FBFF
+dmenu.selbackground: #4f4f4f
