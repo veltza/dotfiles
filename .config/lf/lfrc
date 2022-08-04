@@ -54,6 +54,14 @@ set ifs "\n"
 
 # Custom Functions
 cmd on-cd &{{
+    # Reset prompt
+    fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
+    lf -remote "send $id set promptfmt \"$fmt\""
+
+    # Show git branch in prompt
+    branch=$(git branch --show-current 2> /dev/null)
+    [ -n "$branch" ] && lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m\""
+
     # Show current directory in window title
     case "$PWD" in
         $HOME) title=$USER ;;
@@ -62,16 +70,8 @@ cmd on-cd &{{
     esac
     printf "\033]0;$title - lf\007" > /dev/tty
 }}
-on-cd
 
 cmd on-quit ${{
-    # Restore window title
-    case "$PWD" in
-        $HOME) title=$USER ;;
-        $HOME*) title="~${PWD#$HOME}" ;;
-        *) title=$PWD ;;
-    esac
-    printf "\033]0;$title\007" > /dev/tty
     # Restore window title
     #terminal=$(xprop -id $WINDOWID | grep '^WM_CLASS' | cut -d\" -f2)
     #case "$terminal" in
@@ -945,6 +945,7 @@ cmd dotstat ${{
 cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
 cmd sudolf $sudo -E lf
 cmd sudorm $sudo rm -r -i -- $fx
+cmd q quit
 
 # Remove some defaults
 map c
@@ -1003,6 +1004,7 @@ map ts dragon-stay
 map ti dragon-individual
 map tr dragon-receive
 map td download-file
+map <c-r> :on-cd; reload
 
 # Archive Mappings
 map at compress tar
