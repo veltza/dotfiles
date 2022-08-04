@@ -51,6 +51,12 @@ lc ()
   fi
 }
 
+# Alias for lf
+lf () {
+    lfrun "$@"
+    cd .
+}
+
 # Change working dir in shell to last dir in lf on exit (adapted from ranger).
 lfcd () {
     local tmp="$(mktemp -uq ${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lfcd.XXXXXXXX)"

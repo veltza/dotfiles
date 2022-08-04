@@ -1,8 +1,8 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-# Show current directory in terminal window title
-update_terminal_cwd() {
+# Set the terminal title to reflect the current working directory.
+update_terminal_title() {
     case "$PWD" in
         $HOME) title=$USER ;;
         $HOME*) title="~${PWD#$HOME}" ;;
@@ -10,9 +10,9 @@ update_terminal_cwd() {
     esac
     printf "\033]0;$title\007" > /dev/tty
 }
-update_terminal_cwd
+update_terminal_title
 autoload add-zsh-hook
-add-zsh-hook chpwd update_terminal_cwd
+add-zsh-hook chpwd update_terminal_title
 
 # Set up the prompt
 autoload -U colors && colors            # Load colors
