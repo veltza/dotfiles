@@ -54,14 +54,6 @@ set ifs "\n"
 
 # Custom Functions
 cmd on-cd &{{
-    # Reset prompt
-    fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
-    lf -remote "send $id set promptfmt \"$fmt\""
-
-    # Show git branch in prompt
-    branch=$(git branch --show-current 2> /dev/null)
-    [ -n "$branch" ] && lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m\""
-
     # Show current directory in window title
     case "$PWD" in
         $HOME) title=$USER ;;
@@ -69,6 +61,15 @@ cmd on-cd &{{
         *) title=$PWD ;;
     esac
     printf "\033]0;$title - lf\007" > /dev/tty
+
+    # Reset prompt
+    fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
+    lf -remote "send $id set promptfmt \"$fmt\""
+
+    # Show git branch in prompt
+    set +e
+    branch=$(git branch --show-current 2> /dev/null)
+    [ -n "$branch" ] && lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m\""
 }}
 
 cmd on-quit ${{
