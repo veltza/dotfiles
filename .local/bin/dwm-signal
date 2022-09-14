@@ -8,15 +8,7 @@ case $# in
 1)
 	case $1 in
 	quit)
-		# kill scratchpads
-		wins=$(wmctrl -l -p -x 2>/dev/null)
-		if [ $? -eq 0 ] && [ -n "$wins" ]; then
-			for instance in spfm.st spterm.st qalculate; do
-				pids=$(printf '%s' "$wins" | awk -v iname="$instance" '$4 ~ iname {print $3}')
-				[ -n "$pids" ] && { for pid in $pids; do kill -TERM "$pid"; done }
-			done
-			sleep 0.2
-		fi
+		type hsetroot > /dev/null 2>&1 && hsetroot -solid '#000000'
 		signal $1
 		;;
 	restart)
@@ -41,4 +33,3 @@ case $# in
 	exit 1
 	;;
 esac
-
