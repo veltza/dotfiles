@@ -47,8 +47,8 @@ bindkey '\C-x\C-e' edit-command-line
 mkdir -p ${XDG_DATA_HOME:-$HOME/.local/share}/zsh
 
 # History in cache directory 
-HISTSIZE=2000
-SAVEHIST=2000
+HISTSIZE=10000
+SAVEHIST=10000
 HISTFILE=${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zsh_history
 setopt histignorealldups sharehistory histignorespace
 

@@ -31,8 +31,8 @@ HISTCONTROL=ignoreboth
 shopt -s histappend
 
 # For setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=2000
-HISTFILESIZE=2000
+HISTSIZE=10000
+HISTFILESIZE=10000
 HISTFILE=${XDG_DATA_HOME:-$HOME/.local/share}/bash/bash_history
 
 # Check the window size after each command and, if necessary,

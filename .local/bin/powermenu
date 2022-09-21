@@ -1,12 +1,17 @@
 #!/bin/sh
 
+system() {
+    type hsetroot > /dev/null 2>&1 && hsetroot -solid '#000000'
+    killall -q picom && sleep 0.1
+    systemctl "$@" -i
+}
+
 chosen=$(printf " Cancel\n Shutdown\n Reboot\n⏾ Suspend\n Hibernation\n Logout" | dmenu "$@" -i -p "Power:")
 
 case "$chosen" in
-    " Shutdown") killall -q picom && sleep 0.2; systemctl poweroff -i ;;
-    " Reboot") killall -q picom && sleep 0.2; systemctl reboot -i ;;
+    " Shutdown") system poweroff ;;
+    " Reboot") system reboot ;;
     "⏾ Suspend") systemctl suspend ;;
     " Hibernation") systemctl hibernate ;;
     " Logout") exec dwm-signal quit ;;
 esac
-
