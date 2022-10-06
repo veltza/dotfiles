@@ -21,7 +21,7 @@ precmd() { vcs_info }
 zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:git*' formats " %{$fg[yellow]%}%  %b"
 setopt prompt_subst
-prompt='%B%{$fg[green]%}%n%{$fg[green]%}@%{$fg[green]%}%M%{$fg[white]%}:%{$fg[blue]%}%~${vcs_info_msg_0_}%{$reset_color%}%#%b '
+prompt='%B%{$fg[green]%}%n%{$fg[green]%}@%{$fg[green]%}%M%{$fg[white]%}:%{$fg[blue]%}%(4~|%-1~/…/%2~|%~)${vcs_info_msg_0_}%{$reset_color%}%#%b '
 
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -e
