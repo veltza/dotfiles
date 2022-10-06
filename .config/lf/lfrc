@@ -100,6 +100,7 @@ cmd open ${{
     fi
     case $(file --mime-type "$f" -b) in
         text/*|application/json|inode/x-empty) $EDITOR "$f";;
+        application/x-*executable) setsid "$f" > /dev/null 2> /dev/null & ;;
         *) for f in $fx; do setsid xdg-open "$f" > /dev/null 2> /dev/null & done;;
     esac
 }}
@@ -431,6 +432,12 @@ cmd unarchive-to &{{
             f=$(printf '%s' "$f" | sed -e 's/\.tar\.[[:alnum:]]\{2,3\}$//') ;;
         *.7z|*.gz|*.xz|*.deb|*.iso|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
             f=$(printf '%s' "$f" | sed -e 's/\.[[:alnum:]]\{2,4\}$//') ;;
+        *.AppImage)
+            if [ ! -x "$f" ]; then
+                lf -remote "send $id echoerr AppImage is not executable : cannot extract files!"
+                exit 0
+            fi
+            f=$(printf '%s' "$f" | sed -e 's/\.[[:alnum:]]\{8\}$//') ;;
         *)  lf -remote "send $id echoerr Unsupported format!"
             exit 0 ;;
     esac
@@ -446,8 +453,13 @@ cmd unarchive-here &{{
     case "$f" in
         *.tar.bz|*.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst) ;;
         *.7z|*.gz|*.xz|*.deb|*.iso|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip) ;;
-        *) lf -remote "send $id echoerr Unsupported format!"
-           exit 0 ;;
+        *.AppImage)
+            if [ ! -x "$f" ]; then
+                lf -remote "send $id echoerr AppImage is not executable : cannot extract files!"
+                exit 0
+            fi ;;
+        *)  lf -remote "send $id echoerr Unsupported format!"
+            exit 0 ;;
     esac
     lf -remote "send $id push :unarchive<space>current<space>file<space>here?<space>[Y/n]<space>"
 }}
@@ -467,7 +479,10 @@ cmd unarchive ${{
     else
         shift 4
         targetdir=$(printf '%s' "$*" | tr '\n' ' ')
-        mkdir -p -- $targetdir
+        case "$f" in
+            *.AppImage) ;;
+            *) mkdir -p -- $targetdir
+        esac
     fi
     oldfiles=$(ls --group-directories-first)
     case "$f" in
@@ -489,7 +504,16 @@ cmd unarchive ${{
             case "$f" in
                 *.gz) gunzip -- $f ;;
                 *) unxz -- $f ;;
-            esac ;;
+            esac
+            ;;
+        *.AppImage)
+            if [ -e "squashfs-root" ]; then
+                lf -remote "send $id echoerr \'squashfs-root\' directory or file already exists : cannot extract files!"
+                exit 0
+            fi
+            $f --appimage-extract
+            [ "$targetdir" != "." ] && mv -- squashfs-root $targetdir
+            ;;
         *) lf -remote "send $id echoerr Unsupported format!"
            exit 0;;
     esac
@@ -915,32 +939,6 @@ cmd download-file ${{
     name=$(printf '%s' "$name" | sed 's/\\/\\\\/g;s/"/\\"/g');
     lf -remote "send reload"
     lf -remote "send $id select \"$name\""
-}}
-
-cmd dotadd ${{
-    set +e
-    printf '\n\n'
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME add $fx
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME status
-    printf 'Press enter to continue'; read -r ans
-    set -e
-}}
-
-cmd dotrm ${{
-    set +e
-    printf '\n\n'
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME restore --staged $fx
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME status
-    printf 'Press enter to continue'; read -r ans
-    set -e
-}}
-
-cmd dotstat ${{
-    set +e
-    printf '\n\n'
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME status
-    printf 'Press enter to continue'; read -r ans
-    set -e
 }}
 
 cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh

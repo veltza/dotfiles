@@ -31,6 +31,22 @@ image() {
     fi
 }
 
+appimagefiles() {
+    if [ ! -x "$1" ]; then
+        echo "'$1' is not executable : cannot list files!"
+        exit 0
+    fi
+    mountpoint="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lf-appimage-mountpoint-$$"
+    rm -f "$mountpoint"
+    mkfifo "$mountpoint"
+    "$1" --appimage-mount > "$mountpoint" &
+    read appdir < "$mountpoint"
+    files='' && [ -n "$appdir" ] && files=$(cd "$appdir" && find . -ls)
+    kill $!
+    rm -f "$mountpoint"
+    [ -n "$files" ] && echo "$files" || return 1
+}
+
 batorcat() {
     if type bat > /dev/null 2>&1; then
         [ -n "$verbose" ] && w='auto' || w='never'
@@ -87,6 +103,9 @@ case "$1" in
         7z l "$1" ;;
     *.deb)
         ar t${verbose} "$1" ;;
+    *.AppImage)
+        [ -n "$verbose" ] && appimagefiles "$1" 2>/dev/null || batorcat "$1" ;;
     *)
         batorcat "$1" ;;
 esac
+exit 0
