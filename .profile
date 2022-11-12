@@ -41,7 +41,3 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 
 # ls colors
 [ -f "$XDG_CONFIG_HOME/shell/dircolors" ] && . "$XDG_CONFIG_HOME/shell/dircolors"
-
-# lf icons
-[ -f "$XDG_CONFIG_HOME/shell/lf-icons" ] && . "$XDG_CONFIG_HOME/shell/lf-icons"
-

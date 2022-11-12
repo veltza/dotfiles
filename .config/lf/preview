@@ -58,7 +58,7 @@ batorcat() {
     fi
 }
 
-case "$1" in
+case "$(readlink -f "$1")" in
     *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.webp)
         image "$1" "$2" "$3" "$4" "$5" ;;
     *.six|*.svg|*.xpm)
@@ -103,7 +103,7 @@ case "$1" in
         7z l "$1" ;;
     *.deb)
         ar t${verbose} "$1" ;;
-    *.AppImage)
+    *.AppImage|*.appimage)
         [ -n "$verbose" ] && appimagefiles "$1" 2>/dev/null || batorcat "$1" ;;
     *)
         batorcat "$1" ;;
