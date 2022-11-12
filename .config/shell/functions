@@ -66,6 +66,7 @@ lfcd () {
         rm -f "$tmp"
         [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
     fi
+    cd .
 }
 
 # tmux wrapper

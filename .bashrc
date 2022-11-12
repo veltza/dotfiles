@@ -95,7 +95,7 @@ unset color_prompt force_color_prompt
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bash-dirhistory"
-command -v lfcd &> /dev/null && bind '"\C-o":"\C-ulfcd\C-m"'
+command -v lfcd &> /dev/null && bind '"\C-o":"\C-u\C-klfcd\C-m"'
 
 # Colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'

@@ -75,7 +75,7 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf-key-bindings.zsh"
-command -v lfcd &> /dev/null && bindkey -s '^o' '^ulfcd\n'
+command -v lfcd &> /dev/null && bindkey -s '^o' '^u^klfcd\n'
 
 # Plugins
 typeset -gA ZSH_HIGHLIGHT_STYLES
