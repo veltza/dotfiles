@@ -8,7 +8,7 @@ case $# in
 1)
 	case $1 in
 	quit)
-		type hsetroot > /dev/null 2>&1 && hsetroot -solid '#000000'
+		command -v setbg >/dev/null && setbg --clear
 		signal $1
 		;;
 	restart)

@@ -1,9 +1,9 @@
 #!/bin/sh
 
 system() {
-    type hsetroot > /dev/null 2>&1 && hsetroot -solid '#000000'
+    command -v setbg >/dev/null && setbg --clear
     killall -q picom && sleep 0.1
-    systemctl "$@" -i
+    systemctl "$@"
 }
 
 chosen=$(printf " Cancel\n Shutdown\n Reboot\n⏾ Suspend\n Hibernation\n Logout" | dmenu "$@" -i -p "Power:")
