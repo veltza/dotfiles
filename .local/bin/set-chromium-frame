@@ -1,6 +1,6 @@
 #!/bin/dash
 
-cd ~/.config/chromium/Default
+cd ~/.config/chromium/Default || exit 1
 
 grep -q '"custom_chrome_frame":true' Preferences && frame="on" || frame="off"
 

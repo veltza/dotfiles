@@ -12,6 +12,7 @@ dwm-pulsedaemon
 easyeffects --gapplication-service &
 set-chromium-frame off &
 set-firefox-titlebar off &
+thunar --daemon &
 dwm-lock start &
 
 while true; do
@@ -19,5 +20,5 @@ while true; do
 done
 
 dwm-lock stop
-killall -q xsettingsd picom dunst dsblocks pactl easyeffects
+killall -q xsettingsd picom dunst dsblocks pactl easyeffects thunar
 sleep 0.1

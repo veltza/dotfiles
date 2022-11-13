@@ -1,6 +1,6 @@
 #!/bin/dash
 
-cd ~/.mozilla/firefox/agylbpjh.default-release
+cd ~/.mozilla/firefox/agylbpjh.default-release || exit 1
 
 grep -q '"browser.tabs.inTitlebar", 1' prefs.js && bar="on" || bar="off"
 
