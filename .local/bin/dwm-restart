@@ -1,13 +1,16 @@
 #!/bin/dash
 
-# kill nm-applet
-nmapp=$(pidof nm-applet)
-[ -n "$nmapp" ] && killall nm-applet
+# kill running systray apps
+nm_pid=$(pgrep '^nm-applet$')
+udiskie_pid=$(pgrep '^udiskie$')
+[ -n "$nm_pid" ] && killall nm-applet
+[ -n "$udiskie_pid" ] && killall udiskie
 
 # restart dwm
-dwm-signal restart
+dwm-ctl restart
 sleep 0.5s
 
-# restart nm-applet
-[ -n "$nmapp" ] && { nm-applet & }
+# restart running systray apps
+[ -n "$nm_pid" ] && { nm-applet & }
+[ -n "$udiskie_pid" ] && { udiskie & }
 notify-send -t 2500 "dwm is restarted"

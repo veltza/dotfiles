@@ -12,13 +12,20 @@ dwm-pulsedaemon
 easyeffects --gapplication-service &
 set-chromium-frame off &
 set-firefox-titlebar off &
-thunar --daemon &
+udiskie &
 dwm-lock start &
 
-while true; do
-  dwm || break
+# dwm exit codes: 0 = quit, 100 = restart, 101 = poweroff, 102 = reboot
+while [ ${exitcode:-100} -eq 100 ]; do
+    dwm; exitcode=$?
 done
 
+setbg --clear
 dwm-lock stop
-killall -q xsettingsd picom dunst dsblocks pactl easyeffects thunar
+killall -q xsettingsd picom dunst dsblocks pactl easyeffects udiskie
 sleep 0.1
+
+case $exitcode in
+    101) systemctl poweroff ;;
+    102) systemctl reboot ;;
+esac

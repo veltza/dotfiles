@@ -1,0 +1,31 @@
+#!/bin/dash
+
+signal() {
+    xsetroot -name "fsignal:$*"
+}
+
+case $# in
+    1)
+        case $1 in
+            quit|restart|poweroff|reboot)
+                signal $1
+                ;;
+            *)
+                echo "Unknown command or missing one argument."
+                exit 1
+                ;;
+        esac
+        ;;
+    2)
+        case $1 in
+            *)
+                echo "Unknown command or one too many arguments."
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo "Too many arguments."
+        exit 1
+        ;;
+esac

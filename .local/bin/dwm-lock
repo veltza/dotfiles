@@ -1,19 +1,47 @@
 #!/usr/bin/env bash
+#
+# Screen locker for dwm
+# Dependencies: slock, xss-lock, xssproxy, xdotool, xrandr
 
 timeout_dim=420     # Dim the screen after inactivity (sec)
 timeout_lock=7      # Lock the screen after dimming (sec)
 max_brightness=90   # Start fading from this brightness percent
 min_brightness=5    # Fade to this brightness percent
 fade_step_time=0.05 # Time to sleep (in seconds) between fading decrements
-output_port=eDP     # Display
+restore_brightness="colortemp" # Function or script to restore the screen brightness, e.g. "set_brightness 100"
+#target_screen=eDP  # Dimmable screen (autodetected if it is empty or unset)
+
+detect_target_screen() {
+    # Ref. https://superuser.com/a/1238384
+    # Note: This function is not fully tested yet!
+    local name width height xoff yoff
+    eval "$(xdotool getmouselocation --shell)"
+
+    while read name width height xoff yoff; do
+        if [ "${X}" -ge "$xoff" ] && \
+           [ "${Y}" -ge "$yoff" ] && \
+           [ "${X}" -lt "$(($xoff+$width))" ] && \
+           [ "${Y}" -lt "$(($yoff+$height))" ]
+        then
+            target_screen=$name
+            return 0
+        fi
+    done < <(xrandr | grep -w connected |
+        sed -r "s/^([^ ]*).*\b([-0-9]+)x([-0-9]+)\+([-0-9]+)\+([-0-9]+).*$/\1 \2 \3 \4 \5/" |
+        sort -nk4,5)
+
+    echo "Couldn't find any dimmable screens!" >&2
+    return 1
+}
 
 set_brightness() {
-    value="$(($1/100)).$(($1/10%10))$(($1%10))"
-    xrandr --output $output_port --brightness $value
+    local value="$(($1/100)).$(($1/10%10))$(($1%10))"
+    xrandr --output $target_screen --brightness $value
 }
 
 dim() {
-    level=$max_brightness
+    [ -n "${target_screen:-}" ] || detect_target_screen || return
+    local level=$max_brightness
     while [ $level -ge $min_brightness ]; do
         set_brightness $level
         level=$((level-1))
@@ -28,13 +56,12 @@ case "${1:-}" in
         pidof xssproxy > /dev/null || { xssproxy & }
         ;;
     stop)
-        killall -q xss-lock
-        killall -q xssproxy
         xset s reset
+        killall -q xss-lock xssproxy
         ;;
     dim)
         trap 'exit 0' TERM INT
-        trap "colortemp; pkill -P $$ 2> /dev/null" EXIT
+        eval "trap \"$restore_brightness; pkill -P \$\$ 2> /dev/null\"" EXIT
         dim
         sleep 2147483647 &
         wait
