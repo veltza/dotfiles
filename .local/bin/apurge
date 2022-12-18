@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "Removing orphaned packages..."
+sudo apt update
+sudo apt autoclean
+sudo apt autoremove
+sudo apt remove --purge $(dpkg -l | grep "^rc" | awk '{print $2}')
