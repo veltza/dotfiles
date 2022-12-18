@@ -372,12 +372,21 @@ cmd trash_restore ${{
 
 cmd fzf_jump ${{
     if [ "$PWD" = "$HOME" ]; then
-        res="$(find . -maxdepth 3 \( -path '*/.git' -o -name '.gitignore' -o -path './.cache' -o -path './.mozilla' -o -path './.thunderbird' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        if command -v fd >/dev/null; then
+            res="$(fd --max-depth=4 --follow -H -E .backups -E .cache -E .git -E .mozilla -E .thunderbird -E .windows | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        else
+            res="$(find -L . -maxdepth 4 \(  -path './.backups' -o -path './.cache' -o -path '*/.git' -o -name '.gitignore' -o -path './.mozilla' -o -path './.thunderbird' -o -path './.windows' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        fi
     elif printf '%s' "$PWD" | grep -q $HOME; then
-        res="$(find . \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        if command -v fd >/dev/null; then
+            res="$(fd --follow -H -E .git | fzf --reverse --header='a Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        else
+            res="$(find -L . \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        fi
     else
         res="$(find . -maxdepth 2 \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
     fi
+    [ -z "$res" ] && exit 0
     [ -d "$res" ] && cmd="cd" || cmd="select"                                                       
     lf -remote "send $id $cmd \"$res\""
 }}

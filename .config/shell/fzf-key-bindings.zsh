@@ -41,14 +41,22 @@ fi
 # CTRL-T - Paste the selected file path(s) into the command line
 __fsel() {
   if [ "$PWD" = "$HOME" ]; then
-  local cmd="${FZF_CTRL_T_COMMAND:-"command find . -maxdepth 3 \\( -path '*/.git' -o -name '.gitignore' -o -path './.cache' -o -path './.mozilla' -o -path './.thunderbird' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
-    -o -print 2> /dev/null | cut -b3-"}"
+    if command -v fd &>/dev/null; then
+      local cmd="${FZF_CTRL_T_COMMAND:-"command fd --max-depth=4 --follow -H -E .backups -E .cache -E .git -E .mozilla -E .thunderbird -E .windows"}"
+    else
+      local cmd="${FZF_CTRL_T_COMMAND:-"command find -L . -maxdepth 4 \\( -path '*/.git' -o -name '.gitignore' -o -path './.backups' -o -path './.cache' -o -path './.mozilla' -o -path './.thunderbird' -o -path './.windows' \
+        -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune -o -print 2> /dev/null | cut -b3-"}"
+    fi
   elif printf '%s' "$PWD" | grep -q $HOME; then
-  local cmd="${FZF_CTRL_T_COMMAND:-"command find . \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
-    -o -print 2> /dev/null | cut -b3-"}"
+    if command -v fd &>/dev/null; then
+      local cmd="${FZF_CTRL_T_COMMAND:-"command fd --follow -H -E .git"}"
+    else
+      local cmd="${FZF_CTRL_T_COMMAND:-"command find -L . \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
+        -o -print 2> /dev/null | cut -b3-"}"
+    fi
   else
-  local cmd="${FZF_CTRL_T_COMMAND:-"command find . -maxdepth 2 \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
-    -o -print 2> /dev/null | cut -b3-"}"
+    local cmd="${FZF_CTRL_T_COMMAND:-"command find . -maxdepth 2 \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
+      -o -print 2> /dev/null | cut -b3-"}"
   fi
   setopt localoptions pipefail no_aliases 2> /dev/null
   local item
@@ -77,14 +85,22 @@ bindkey '^T' fzf-file-widget
 # ALT-C - cd into the selected directory
 fzf-cd-widget() {
   if [ "$PWD" = "$HOME" ]; then
-  local cmd="${FZF_ALT_C_COMMAND:-"command find . -maxdepth 3 \\( -path '*/.git' -o -name '.gitignore' -o -path './.cache' -o -path './.mozilla' -o -path './.thunderbird' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
-    -o -print 2> /dev/null | cut -b3-"}"
+    if command -v fd &>/dev/null; then
+      local cmd="${FZF_CTRL_T_COMMAND:-"command fd -td --max-depth=4 --follow -H -E .backups -E .cache -E .git -E .mozilla -E .thunderbird -E .windows"}"
+    else
+      local cmd="${FZF_CTRL_T_COMMAND:-"command find -L . -maxdepth 4 \\( -path '*/.git' -o -name '.gitignore' -o -path './.backups' -o -path './.cache' -o -path './.mozilla' -o -path './.thunderbird' -o -path './.windows' \
+        -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune -o -type d -print 2> /dev/null | cut -b3-"}"
+    fi
   elif printf '%s' "$PWD" | grep -q $HOME; then
-  local cmd="${FZF_ALT_C_COMMAND:-"command find . \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
-    -o -print 2> /dev/null | cut -b3-"}"
+    if command -v fd &>/dev/null; then
+      local cmd="${FZF_CTRL_T_COMMAND:-"command fd -td --follow -H -E .git"}"
+    else
+      local cmd="${FZF_CTRL_T_COMMAND:-"command find -L . \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
+        -o -type d -print 2> /dev/null | cut -b3-"}"
+    fi
   else
-  local cmd="${FZF_ALT_C_COMMAND:-"command find . -maxdepth 2 \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
-    -o -print 2> /dev/null | cut -b3-"}"
+    local cmd="${FZF_ALT_C_COMMAND:-"command find . -maxdepth 2 \\( -path '*/.git' -o -name '.gitignore' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \\) -prune \
+      -o -print 2> /dev/null | cut -b3-"}"
   fi
   setopt localoptions pipefail no_aliases 2> /dev/null
   local dir="$(eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS" $(__fzfcmd) +m)"
