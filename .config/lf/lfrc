@@ -23,7 +23,7 @@
 # docx2txt
 # glow
 # gunzip
-# mediainfo
+# mediainfo or exiftool
 # odt2txt
 # pdftotext
 # tar
@@ -33,6 +33,7 @@
 # bat (optional)
 # chafa (optional)
 # highlight (optional)
+# transmission-show (optional)
 # ueberzug (optional)
 
 # Basic settings
