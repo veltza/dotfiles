@@ -1,0 +1,29 @@
+# Search hidden files and directories
+--hidden
+
+# Follow symbolic links
+--follow
+
+# Don't respect ignore files (.gitignore, .ignore, etc.)
+--no-ignore
+
+# Exclude directories
+--glob=!{**/.ccls-cache/*,**/.git/*,**/.svn/*,**/node_modules/*,**/Trash/*}
+
+# Exclude file types
+--glob=!*.{lock}
+
+# Exclude files
+--glob=!{bash_history,package-lock.json,zsh_history}
+
+# Put filename on same line as match
+#--no-heading
+
+# Don't print lines longer than this limit
+--max-columns=500
+
+# Searches case insensitively
+--smart-case
+
+# Sort by file path (disables parallelism)
+#--sort=path
