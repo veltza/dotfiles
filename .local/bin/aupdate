@@ -1,6 +1,6 @@
 #!/bin/sh
 sudo apt update && {
-    hold=$(sudo apt-mark showhold | sed 's/$/\//')
+    hold=$(sudo apt-mark showhold | awk '{ print $0"/" }')
     sudo apt list --upgradable 2>/dev/null | awk -v hold="$hold" '{
         split($1, name, "/"); if (index(hold, name[1]"/") > 0) { printf "(Hold) " }; print $0;
     }'
