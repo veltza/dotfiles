@@ -3,9 +3,11 @@
 <action>
 	<icon>utilities-terminal</icon>
 	<name>Open Terminal Here</name>
+	<submenu></submenu>
 	<unique-id>1617816885862980-1</unique-id>
 	<command>cd %f; st</command>
 	<description>Example for a custom action</description>
+	<range></range>
 	<patterns>*</patterns>
 	<startup-notify/>
 	<directories/>
@@ -13,18 +15,22 @@
 <action>
 	<icon>system-file-manager</icon>
 	<name>Open Thunar as Root Here</name>
+	<submenu></submenu>
 	<unique-id>1619526840971511-1</unique-id>
 	<command>pkexec thunar %f</command>
 	<description></description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 </action>
 <action>
 	<icon>meld</icon>
 	<name>Compare</name>
+	<submenu></submenu>
 	<unique-id>1619528599268694-1</unique-id>
 	<command>meld %F</command>
 	<description></description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 	<other-files/>
@@ -33,10 +39,52 @@
 <action>
 	<icon>preferences-system-search</icon>
 	<name>Search Files in Folder</name>
+	<submenu></submenu>
 	<unique-id>1620398043116826-1</unique-id>
 	<command>catfish %f</command>
 	<description></description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
+</action>
+<action>
+	<icon></icon>
+	<name>Create symlink</name>
+	<submenu></submenu>
+	<unique-id>1394124450909421-1</unique-id>
+	<command>bash -c &apos;F=&quot;$1&quot;; N=&quot;$2&quot;;  P=$(readlink -f &quot;$PWD&quot;); R=$(readlink -f &quot;$F&quot;); [ &quot;$P&quot; = &quot;$R&quot; ] &amp;&amp; exit; ln -s &quot;$F&quot; &quot;$N (symlink)&quot;&apos; - %f %n</command>
+	<description>Softlink between two files or directories</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<other-files/>
+	<text-files/>
+</action>
+<action>
+	<icon></icon>
+	<name>Check data integrity</name>
+	<submenu></submenu>
+	<unique-id>1426501047462724-5</unique-id>
+	<command>bash -c &apos;f=$1; n=$2; hashtype=$(echo &quot;${n##*.}&quot; | sed &quot;s/sum//&quot;); tmp=&quot;$(mktemp ${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/thunar.XXXXXXXX)&quot;; trap &quot;jobs -p | xargs -r pkill -P; pkill -P $$; rm -f $tmp&quot; EXIT; { echo 50; echo &quot;#Please, wait. The progress bar is not updating&quot;; &quot;${hashtype}sum&quot; -c &quot;$f&quot; &gt; $tmp 2&gt;/dev/null; echo 100; } | yad --progress --width=300 --height=150 --auto-close --auto-kill --button=Cancel:1 --center --title=&quot;Checksum utility&quot; --text=&quot;  Checking $hashtype checksum of  \n&quot;&quot;  $(echo &quot;$n&quot; | rev | cut -f2- -d. | rev)  &quot;; result=$(sed -e &quot;s/^/  /&quot; -e &quot;s/$/  /&quot; $tmp); rm -f $tmp; yad --info --width=300 --height=150 --center --button=Close --title=&quot;Data integrity result&quot; --text=&quot;$result&quot;&apos; - %f %n</command>
+	<description>Compare ISO and hash files</description>
+	<range></range>
+	<patterns>*.md5;*.md5sum;*.sha;*.shasum;*.sha1;*.sha1sum;*.sha224;*.sha224sum;*.sha256;*.sha256sum;*.sha384;*.sha384sum;*.sha512;*.sha512sum</patterns>
+	<text-files/>
+</action>
+<action>
+	<icon></icon>
+	<name>Compute sha256 checksum</name>
+	<submenu></submenu>
+	<unique-id>1426501025005582-5</unique-id>
+	<command>bash -c &apos;f=$1; n=$2; tmp=&quot;$(mktemp ${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/thunar.XXXXXXXX)&quot;; trap &quot;jobs -p | xargs -r pkill -P; pkill -P $$; rm -f $tmp&quot; EXIT; { echo 50; echo &quot;#Please, wait. The progress bar is not updating&quot;; sha256sum &quot;$f&quot; &gt; $tmp; echo 100; } | yad --progress --width=300 --height=150 --auto-close --auto-kill --button=Cancel:1 --center --title=&quot;Checksum utility&quot; --text=&quot;  Calculating sha256 checksum for  \n  $n  &quot;; hash=$(cut -d&quot; &quot; -f1 $tmp); rm -f $tmp; yad --info --width=300 --height=150 --center --button=Close:0 --button=Copy:2 --title=&quot;Computed checksum for $n&quot; --text=&quot;$(echo &quot;  File: $f  &quot;; echo &quot;  sha256: $hash  &quot;)&quot;; if [ $? -eq 2 ]; then echo -n &quot;$hash&quot; | xclip -sel clip; notify-send -t 4000 &quot;The checksum is copied to the clipboard&quot;; fi&apos; - %f %n</command>
+	<description>Display sha256 checksum of file</description>
+	<range></range>
+	<patterns>*</patterns>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
 </action>
 </actions>
