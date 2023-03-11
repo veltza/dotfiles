@@ -21,8 +21,10 @@ while [ ${exitcode:-100} -eq 100 ]; do
 done
 
 setbg --clear
+#xsetroot -cursor_name watch 2>/dev/null
 dwm-lock stop
-killall -q xsettingsd picom dunst dsblocks pactl easyeffects udiskie
+killall -q xsettingsd polkit-gnome-authentication-agent-1
+killall -q picom dunst dsblocks pactl easyeffects udiskie lf
 sleep 0.1
 
 case $exitcode in

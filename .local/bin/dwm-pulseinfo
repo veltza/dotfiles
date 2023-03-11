@@ -15,10 +15,8 @@ pactl list sinks | awk -v sink="$sink" '
         } else if ($1 == "device.description") {
             for (i=3; i<=NF; i++) desc=desc" "$i
             desc = substr(desc, 3, (length(desc)-3))
-            if (desc) desc=" "desc
         } else if ($1 == "Active" && $2 == "Port:") {
-            if (tolower($3) ~ /headphone/)
-                o = 1
+            o = (tolower($3) ~ /headphone/) ? 1 : 0
             exit
         }
         next
@@ -28,7 +26,7 @@ pactl list sinks | awk -v sink="$sink" '
     }
     END {
         if (f) {
-            printf "%d %d %d %d%s", m, vl, vr, o, desc
+            printf "%d %d %d %d%s", m, vl, vr, o, desc ? " "desc : ""
         }
     }
 '
