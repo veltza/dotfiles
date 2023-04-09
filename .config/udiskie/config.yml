@@ -1,0 +1,6 @@
+program_options:
+  tray: auto
+  menu: flat
+  automount: true
+  notify: true
+  file_manager: thunar
