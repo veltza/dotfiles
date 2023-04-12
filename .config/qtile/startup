@@ -1,0 +1,32 @@
+#!/bin/dash
+
+xsettingsd &
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+colortemp
+tearfree
+picom &
+dunst &
+setbg &
+easyeffects --gapplication-service &
+set-chromium-frame off &
+set-firefox-titlebar off &
+sxhkd &
+udiskie &
+qtile-lock start &
+
+shutdown_cmd="${XDG_RUNTIME_DIR:-/tmp}/qtile-shutdown-cmd"
+rm -f "$shutdown_cmd"
+while [ ! -e "$shutdown_cmd" ]; do
+    qtile start
+done
+
+setbg --clear
+# xsetroot -cursor_name watch 2>/dev/null
+qtile-lock stop
+killall -q xsettingsd polkit-gnome-authentication-agent-1
+killall -q picom dunst dsblocks pactl easyeffects sxhkd udiskie lf
+sleep 0.1
+
+case "$(cat "$shutdown_cmd")" in
+    poweroff|reboot) systemctl $(cat "$shutdown_cmd") ;;
+esac

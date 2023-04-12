@@ -1,0 +1,28 @@
+#!/bin/dash
+
+case $# in
+    1)
+        case $1 in
+            quit|poweroff|reboot)
+                echo "$1" > "${XDG_RUNTIME_DIR:-/tmp}/qtile-shutdown-cmd"
+                exec qtile cmd-obj -o cmd -f shutdown
+                ;;
+            *)
+                echo "Unknown command or missing one argument."
+                exit 1
+                ;;
+        esac
+        ;;
+    2)
+        case $1 in
+            *)
+                echo "Unknown command or one too many arguments."
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo "Too many arguments."
+        exit 1
+        ;;
+esac

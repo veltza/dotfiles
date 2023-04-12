@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Screen locker for dwm
+# Screen locker for dwm and qtile
 # Dependencies: slock, xss-lock, xssproxy, xdotool, xrandr
 
 timeout_dim=420     # Dim the screen after inactivity (sec)
@@ -10,6 +10,11 @@ min_brightness=5    # Fade to this brightness percent
 fade_step_time=0.05 # Time to sleep (in seconds) between fading decrements
 restore_brightness="colortemp" # Function or script to restore the screen brightness, e.g. "set_brightness 100"
 #target_screen=eDP  # Dimmable screen (autodetected if it is empty or unset)
+
+case "$(basename "$0")" in
+    qtile-lock) slockbin="slock-qtile" ;;
+             *) slockbin="slock" ;;
+esac
 
 detect_target_screen() {
     # Ref. https://superuser.com/a/1238384
@@ -52,7 +57,7 @@ dim() {
 case "${1:-}" in
     start)
         xset s $timeout_dim $timeout_lock
-        pidof xss-lock > /dev/null || { xss-lock -n 'dwm-lock dim' -- slock & }
+        pidof xss-lock > /dev/null || { xss-lock -n 'dwm-lock dim' -- $slockbin & }
         pidof xssproxy > /dev/null || { xssproxy & }
         ;;
     stop)
@@ -70,7 +75,7 @@ case "${1:-}" in
         if pidof xss-lock > /dev/null; then
             xset s activate
         else
-            slock
+            $slockbin
         fi
         ;;
 esac
