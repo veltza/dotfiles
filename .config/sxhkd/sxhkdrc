@@ -1,0 +1,2 @@
+{@Caps_Lock, alt + @Caps_Lock, ctrl + @Caps_Lock, mod5 + @Caps_Lock, shift + @Caps_Lock, super + @Caps_Lock}
+    qtile cmd-obj -o widget capslockwidget -f force_update
