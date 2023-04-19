@@ -92,3 +92,29 @@ update () {
     fi
     cd .
 }
+
+# Use fd (https://github.com/sharkdp/fd) instead of the default find
+# command for listing path candidates.
+# - The first argument to the function ($1) is the base path to start traversal
+# - See the source code (completion.{bash,zsh}) for the details.
+_fzf_compgen_path() {
+    if command -v fd &>/dev/null; then
+        fd --follow -H -E .git . "$1"
+    else
+        echo "$1"
+        command find -L "$1" \
+          -name .git -prune -o -name .hg -prune -o -name .svn -prune -o \( -type d -o -type f -o -type l \) \
+          -a -not -path "$1" -print 2> /dev/null | sed 's@^\./@@'
+    fi
+}
+
+# Use fd to generate the list for directory completion
+_fzf_compgen_dir() {
+    if command -v fd &>/dev/null; then
+        fd -td --follow -H -E .git . "$1"
+    else
+        command find -L "$1" \
+          -name .git -prune -o -name .hg -prune -o -name .svn -prune -o -type d \
+          -a -not -path "$1" -print 2> /dev/null | sed 's@^\./@@'
+    fi
+}

@@ -68,8 +68,11 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 parse_git_branch() {
-    local branch=$(git branch --show-current 2> /dev/null)
-    [ -n "$branch" ] && echo "  $branch"
+    branch="$(git symbolic-ref --short HEAD 2>/dev/null)" || \
+    branch="tags/$(git describe --tags --exact-match HEAD 2>/dev/null)" || \
+    branch="$(git describe --contains HEAD 2>/dev/null)" || \
+    branch="$(git name-rev --name-only --no-undefined --always HEAD 2>/dev/null)"
+    [ -z "$branch" ] || echo "  $branch"
 }
 
 PROMPT_DIRTRIM=2
@@ -95,6 +98,8 @@ unset color_prompt force_color_prompt
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bash-dirhistory"
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.bash"
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.bash"
 command -v lfcd &> /dev/null && bind '"\C-o":"\C-u\C-klfcd\C-m"'
 
 # Colored GCC warnings and errors

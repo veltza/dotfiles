@@ -74,7 +74,8 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 # Aliases, functions, fzf-keybindings
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf-key-bindings.zsh"
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.zsh"
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.zsh"
 command -v lfcd &> /dev/null && bindkey -s '^o' '^u^klfcd\n'
 
 # Plugins
@@ -85,3 +86,5 @@ source "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins/zsh-history-substring-s
 #bindkey "$terminfo[kcud1]" history-substring-search-down
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
+bindkey -M emacs '^P' history-substring-search-up
+bindkey -M emacs '^N' history-substring-search-down
