@@ -11,9 +11,9 @@ exists() {
     command -v "$1" >/dev/null
 }
 
-image() {
+preview_image() {
     if [ -n "$verbose" ]; then
-        viewmediainfo "$1"
+        preview_mediainfo "$1"
     elif [ -n "$FIFO_UEBERZUG" ]; then
         printf '{"action": "add", "identifier": "PREVIEW", "x": "%s", "y": "%s", "width": "%s", "height": "%s", "scaler": "contain", "path": "%s"}\n' "$4" "$5" "$(($2-1))" "$(($3-1))" "$1" > "$FIFO_UEBERZUG"
         exit 1
@@ -21,13 +21,13 @@ image() {
         [ -n "${TMUX:-}" ] && c=240 || c=full
         [ "$2" -le 0 ] && w=$(tput cols) || w=$(($2-4))
         [ "$3" -le 0 ] && h=$(($(tput lines)-1)) || h=$3
-        chafa -c $c -s ${w}x${h} "$1"
+        chafa -c $c -s ${w}x${h} -f symbols "$1"
     else
-        viewmediainfo "$1"
+        preview_mediainfo "$1"
     fi
 }
 
-viewmediainfo() {
+preview_mediainfo() {
     case "$(readlink -f "$1")" in
         *.webp) exists exiftool && { exiftool "$1"; return; }
     esac
@@ -44,7 +44,7 @@ viewmediainfo() {
     fi
 }
 
-viewappimagecontent() {
+preview_appimage() {
     if [ ! -x "$1" ]; then
         echo "'$1' is not executable : cannot list files!"
         exit 0
@@ -73,7 +73,7 @@ batorcat() {
 
 case "$(readlink -f "$1")" in
     *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.webp)
-        image "$1" "$2" "$3" "$4" "$5" ;;
+        preview_image "$1" "$2" "$3" "$4" "$5" ;;
     *.six|*.svg|*.xpm)
         cachefile=$1
         if [ -n "$FIFO_UEBERZUG" ] && exists convert; then
@@ -81,11 +81,11 @@ case "$(readlink -f "$1")" in
             cachefile="${FIFO_UEBERZUG%/fifo}/image-${iname%.*}.jpg"
             convert "$1" "$cachefile"
         fi
-        image "$cachefile" "$2" "$3" "$4" "$5" ;;
+        preview_image "$cachefile" "$2" "$3" "$4" "$5" ;;
     *.tiff)
-        viewmediainfo "$1" ;;
+        preview_mediainfo "$1" ;;
     *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
-        viewmediainfo "$1" ;;
+        preview_mediainfo "$1" ;;
     *.pdf)
         pdftotext "$1" - ;;
     *.odt|*.ods|*.odp|*.sxw)
@@ -110,14 +110,12 @@ case "$(readlink -f "$1")" in
         [ -n "$verbose" ] && unrar l "$1" || unrar lb "$1" ;;
     *.gz)
         [ -n "$verbose" ] && gunzip -l -v "$1" || gunzip -l "$1" ;;
-    *.7z)
-        7z l "$1" ;;
-    *.iso)
+    *.7z|*.iso|*.jar)
         7z l "$1" ;;
     *.deb)
         ar t${verbose} "$1" ;;
     *.AppImage|*.appimage)
-        [ -n "$verbose" ] && viewappimagecontent "$1" 2>/dev/null || batorcat "$1" ;;
+        [ -n "$verbose" ] && preview_appimage "$1" 2>/dev/null || batorcat "$1" ;;
     *.torrent)
         exists transmission-show && transmission-show "$1" || batorcat "$1" ;;
     *)
