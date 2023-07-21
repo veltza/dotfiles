@@ -64,6 +64,8 @@ sudo rsync -aAXH --delete --info=progress2 \
 --exclude='/home/*/.local/share/Trash/' \
 --exclude='/home/*/Downloads/' \
 --exclude='/home/*/tmp/' \
+--exclude='node_modules' \
+--exclude='__pycache__' \
 /home "$dest"
 if [ $? -ne 0 ]; then
     echo "There were errors! Try running the command again to correct them." >&2
