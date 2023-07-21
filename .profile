@@ -22,8 +22,8 @@ export INPUTRC="$XDG_CONFIG_HOME/shell/inputrc"
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/ripgreprc"
 
 # Default apps
-export EDITOR=nvim
-export SUDO_EDITOR=nvim
+export EDITOR=lvim
+export SUDO_EDITOR=lvim
 export BROWSER=chromium
 
 # Less Colors for Man Pages
@@ -34,6 +34,9 @@ export LESS_TERMCAP_so=$(printf '\33[01;47;34m') # begin standout-mode - info bo
 export LESS_TERMCAP_se=$(printf '\33[0m')        # end standout-mode
 export LESS_TERMCAP_us=$(printf '\33[01;32m')    # begin underline
 export LESS_TERMCAP_ue=$(printf '\33[0m')        # end underline
+
+# Less settings
+export LESSUTFCHARDEF=E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p
 export LESSHISTFILE=-
 export LESS="-R"
 

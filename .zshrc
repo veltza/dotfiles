@@ -62,6 +62,7 @@ zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zmodload zsh/complist
+command -v zoxide &> /dev/null && source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/zoxide-cmd-cd.zsh"
 compinit -d ${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zcompdump 
 _comp_options+=(globdots)               # Include hidden files.
 

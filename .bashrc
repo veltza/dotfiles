@@ -101,6 +101,7 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bash-dirhistory"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.bash"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.bash"
 command -v lfcd &> /dev/null && bind '"\C-o":"\C-u\C-klfcd\C-m"'
+command -v zoxide &> /dev/null && eval "$(zoxide init bash)"
 
 # Colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
