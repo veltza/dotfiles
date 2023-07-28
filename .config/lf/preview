@@ -12,12 +12,10 @@ exists() {
 }
 
 preview_image() {
-    if [ -n "$verbose" ]; then
-        preview_mediainfo "$1"
-    elif [ -n "$FIFO_UEBERZUG" ]; then
-        printf '{"action": "add", "identifier": "PREVIEW", "x": "%s", "y": "%s", "width": "%s", "height": "%s", "scaler": "contain", "path": "%s"}\n' "$4" "$5" "$(($2-1))" "$(($3-1))" "$1" > "$FIFO_UEBERZUG"
+    if [ -z "$verbose" ] && [ -n "$FIFO_UEBERZUG" ]; then
+        printf '{"action": "add", "identifier": "PREVIEW", "x": "%s", "y": "%s", "width": "%s", "height": "%s", "scaler": "contain", "path": "%s"}\n' "$(($4+1))" "$5" "$(($2-2))" "$(($3-1))" "$1" > "$FIFO_UEBERZUG"
         exit 1
-    elif exists chafa; then
+    elif [ -z "$verbose" ] && exists chafa; then
         [ -n "${TMUX:-}" ] && c=240 || c=full
         [ "$2" -le 0 ] && w=$(tput cols) || w=$(($2-4))
         [ "$3" -le 0 ] && h=$(($(tput lines)-1)) || h=$3

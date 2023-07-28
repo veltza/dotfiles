@@ -47,6 +47,7 @@ set previewer ~/.config/lf/preview
 set cleaner ~/.config/lf/cleaner
 set scrolloff 4
 set tagfmt "\033[33m%s\033[0m"
+set cursorpreviewfmt "\033[7;90;40m"
 
 # Shell settings
 set shell dash
@@ -946,13 +947,29 @@ cmd cd-media &{{
     done
 }}
 
-cmd open_or_up_open &{{
-    if [ -d "$f" ]; then
-        lf -remote "send $id open"
+cmd ca %{{
+    if [ $# -eq 0 ]; then
+        result=$HOME
+    elif [ $# -eq 1 ] && [ -d "$1" ]; then
+        result=$1
     else
-        lf -remote "send $id up"
-        lf -remote "send $id open"
+	    result="$(zoxide query --exclude $PWD -- $@)"
     fi
+	lf -remote "send $id cd $result"
+}}
+
+cmd ci ${{
+    set +e
+    if [ $# -eq 1 ] && [ -d "$1" ]; then
+        result=$1
+    else
+	    result="$(zoxide query -i --exclude $PWD -- $@)"
+	    if [ $? -eq 1 ]; then
+	        lf -remote "send echo zoxide: no match found"
+	       exit
+	    fi
+    fi
+    [ -z "$result" ] || lf -remote "send $id cd $result"
 }}
 
 cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
@@ -973,6 +990,8 @@ map * mark-remove
 map C clear
 map cc clear
 map cd push :cd<space>
+map ca push :ca<space>
+map ci push :ci<space>
 map cm push :chmod<space>
 map co push :chown<space>
 map csm push :sudochmod<space>
@@ -1000,15 +1019,15 @@ map U unselect
 # Applications
 map bc open-config
 map br bulkrename
-map e $set -f; if [ "$EDITOR" = "vim" ] || [ "$EDITOR" = "nvim" ]; then $EDITOR -p $fx; else $EDITOR $fx; fi
+map e $set -f; case "$EDITOR" in ?vim) $EDITOR -p $fx;; *) $EDITOR $fx;; esac
 map E sudoedit
 map <a-e> suedit
 map I open-with sxiv
 
 # Navigation
 map <a-c> fzf_jump
-map <a-j> :updir; down; open_or_up_open
-map <a-k> :updir; up; open
+map <a-j> :updir; set dironly true; down; set dironly false; open
+map <a-k> :updir; set dironly true; up; set dironly false; open
 map J push 5j
 map K push 5k
 map , find-next
@@ -1062,7 +1081,7 @@ map gtr cd ~/.local/share/Trash/files
 ${{
     preview="preview" && [ "$lf_preview" = "false" ] && preview="nopreview"
     for i in 1 2 3 4 5 6 7 8 9 10; do
-        [ -z "$(lf -remote "send $id set $preview")" ] && break || sleep 0.2
+        [ -z "$(lf -remote "send $id set $preview" 2>&1)" ] && break || sleep 0.2
     done
 }}
 :on-cd
