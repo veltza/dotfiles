@@ -34,6 +34,8 @@ export LESS_TERMCAP_so=$(printf '\33[01;47;34m') # begin standout-mode - info bo
 export LESS_TERMCAP_se=$(printf '\33[0m')        # end standout-mode
 export LESS_TERMCAP_us=$(printf '\33[01;32m')    # begin underline
 export LESS_TERMCAP_ue=$(printf '\33[0m')        # end underline
+export MANROFFOPT="-c"
+#export GROFF_NO_SGR=1
 
 # Less settings
 export LESSUTFCHARDEF=E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p

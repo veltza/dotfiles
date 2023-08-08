@@ -47,6 +47,7 @@ emojis="😀 grinning face
 🙄 face with rolling eyes
 😬 grimacing face
 🤥 lying face
+🫨 shaking face
 😌 relieved face
 😔 pensive face
 😪 sleepy face
@@ -136,13 +137,16 @@ emojis="😀 grinning face
 ❣️ heart exclamation
 💔 broken heart
 ❤️ red heart
+🩷 pink heart
 🧡 orange heart
 💛 yellow heart
 💚 green heart
 💙 blue heart
+🩵 light blue heart
 💜 purple heart
 🤎 brown heart
 🖤 black heart
+🩶 grey heart
 🤍 white heart
 💯 hundred points
 💢 anger symbol
@@ -166,6 +170,8 @@ emojis="😀 grinning face
 🫲 leftwards hand
 🫳 palm down hand
 🫴 palm up hand
+🫷 leftwards pushing hand
+🫸 rightwards pushing hand
 👌 OK hand
 🤌 pinched fingers
 🤏 pinching hand
@@ -329,6 +335,8 @@ emojis="😀 grinning face
 🐅 tiger
 🐆 leopard
 🐴 horse face
+🫎 moose
+🫏 donkey
 🐎 horse
 🦄 unicorn
 🦓 zebra
@@ -390,6 +398,8 @@ emojis="😀 grinning face
 🦩 flamingo
 🦚 peacock
 🦜 parrot
+🪽 wing
+🪿 goose
 🐸 frog
 🐊 crocodile
 🐢 turtle
@@ -410,6 +420,7 @@ emojis="😀 grinning face
 🐙 octopus
 🐚 spiral shell
 🪸 coral
+🪼 jellyfish
 🐌 snail
 🦋 butterfly
 🐛 bug
@@ -437,6 +448,7 @@ emojis="😀 grinning face
 🌻 sunflower
 🌼 blossom
 🌷 tulip
+🪻 hyacinth
 🌱 seedling
 🪴 potted plant
 🌲 evergreen tree
@@ -487,6 +499,8 @@ emojis="😀 grinning face
 🥜 peanuts
 🫘 beans
 🌰 chestnut
+🫚 ginger root
+🫛 pea pod
 🍞 bread
 🥐 croissant
 🥖 baguette bread
@@ -908,6 +922,7 @@ emojis="😀 grinning face
 🩳 shorts
 👙 bikini
 👚 woman’s clothes
+🪭 folding hand fan
 👛 purse
 👜 handbag
 👝 clutch bag
@@ -922,6 +937,7 @@ emojis="😀 grinning face
 👡 woman’s sandal
 🩰 ballet shoes
 👢 woman’s boot
+🪮 hair pick
 👑 crown
 👒 woman’s hat
 🎩 top hat
@@ -960,6 +976,8 @@ emojis="😀 grinning face
 🪕 banjo
 🥁 drum
 🪘 long drum
+🪇 maracas
+🪈 flute
 📱 mobile phone
 📲 mobile phone with arrow
 ☎️ telephone
@@ -1202,6 +1220,7 @@ emojis="😀 grinning face
 ☮️ peace symbol
 🕎 menorah
 🔯 dotted six-pointed star
+🪯 khanda
 ♈ Aries
 ♉ Taurus
 ♊ Gemini
@@ -1237,6 +1256,7 @@ emojis="😀 grinning face
 🔅 dim button
 🔆 bright button
 📶 antenna bars
+🛜 wireless
 📳 vibration mode
 📴 mobile phone off
 ♀️ female sign
