@@ -1,8 +1,17 @@
 #!/bin/sh
 sudo apt update && {
     hold=$(sudo apt-mark showhold | awk '{ print $0"/" }')
-    sudo apt list --upgradable 2>/dev/null | awk -v hold="$hold" '{
-        split($1, name, "/"); if (index(hold, name[1]"/") > 0) { printf "(Hold) " }; print $0;
-    }'
-    [ "${1:-}" != '-y' ] || sudo apt upgrade -y
+    upgs=$(sudo apt list --upgradable 2>/dev/null | awk -v hold="$hold" '
+        !/Listing.../ {
+            split($0, name, "/");
+            if (index(hold, name[1]"/") > 0) printf "\033[33m(Hold) \033[0m";
+            printf "\033[32m%s\033[0m", name[1];
+            for (i = 2; i <= length(name); i++) printf "/%s", name[i];
+            printf "\n";
+        }
+    ')
+    if [ -n "$upgs" ]; then
+        printf 'Listing...\n%s\n' "$upgs"
+        [ "${1:-}" != '-y' ] || sudo apt upgrade -y
+    fi
 }
