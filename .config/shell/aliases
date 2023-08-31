@@ -1,10 +1,10 @@
 if command -v bat >/dev/null; then
     alias bat='bat -p'
-    alias -g -- --help='--help | bat --language=help --style=plain'
+    alias -g -- --help='--help | bat --language=help --style=plain' 2>/dev/null
 fi
 alias bc='bc -l ${XDG_CONFIG_HOME:-$HOME/.config}/bc/bcrc'
 alias bm='bashmount'
-alias cal='cal -mw'
+command -v ncal >/dev/null && alias cal='ncal -Mwb' || alias cal='cal -mw'
 alias cd-='cd -'
 alias cd..='cd ../'
 alias ..='cd ../'

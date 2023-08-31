@@ -1,76 +1,23 @@
-# Extract files from archive
-# usage: ex <archive>
-ex ()
-{
-  if [ -f $1 ] ; then
-    case $1 in
-      *.tar.bz|*.tar.bz2) tar xjf $1 ;;
-      *.tbz|*.tbz2)       tar xjf $1 ;;
-      *.tar.gz|*.tgz)     tar xzf $1 ;;
-      *.tar.xz|*.txz)     tar xJf $1 ;;
-      *.tar.zst|*.tzst)   tar -I zstd -xvf $1 ;;      
-      *.tar)      tar xf $1    ;;
-      *.bz2)      bunzip2 $1   ;;
-      *.rar)      unrar x $1   ;;
-      *.gz)       gunzip $1    ;;
-      *.zip)      unzip $1     ;;
-      *.Z)        uncompress $1;;
-      *.7z|*.iso) 7z x $1      ;;
-      *.deb)      ar x $1      ;;
-      *)          echo "'$1' cannot be extracted via ex()" ;;
-    esac
-  else
-    echo "'$1' is not a valid file"
-  fi
-}
-
-# List contents of archive
-# usage: lc <archive>
-lc ()
-{
-  if [ -f $1 ] ; then
-    case $1 in
-      *.tar.bz|*.tar.bz2) tar -tvf $1 | less ;;
-      *.tbz|*.tbz2)       tar -tvf $1 | less ;;
-      *.tar.gz|*.tgz)     tar -tvf $1 | less ;;
-      *.tar.xz|*.txz)     tar -tvf $1 | less ;;
-      *.tar.zst|*.tzst)   tar -I zstd -tvf $1 | less ;;
-      *.tar)       tar -tvf $1 | less ;;
-      *.bz2)       echo "$1" | rev | cut -d "." -f2- | rev | less ;;
-      *.rar)       unrar l $1 | less ;;
-      *.gz)        gunzip -l $1 | less ;;
-      *.zip)       unzip -Z $1 | less ;;
-      #*.zip)      zipinfo $1 | less ;;
-      *.Z)         uncompress -l $1 | less;;
-      *.7z|*.iso)  7z l $1 | less ;;
-      *.deb)       ar t $1 | less ;;
-      *)           echo "'$1' cannot be viewed via lc()" ;;
-    esac
-  else
-    echo "'$1' is not a valid file"
-  fi
-}
-
 # Alias for lf
-lf () {
+lf() {
     lfrun "$@"
-    cd .
+    update_terminal_title
 }
 
 # Change working dir in shell to last dir in lf on exit (adapted from ranger).
-lfcd () {
-    local tmp="$(mktemp -uq ${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/lfcd.XXXXXXXX)"
-    lfrun -last-dir-path="$tmp" "$@"
-    if [ -f "$tmp" ]; then
-        local dir="$(cat "$tmp")"
-        rm -f "$tmp"
-        [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
-    fi
-    cd .
+lfcd() {
+    lfrun -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lfcd-last-dir-path" "$@" && cdlf
+    update_terminal_title
+}
+
+# Change working dir in shell to last dir in lf
+cdlf() {
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/lfcd-last-dir-path" 2>/dev/null)
+    [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
 }
 
 # tmux wrapper
-tm () {
+tm() {
     if [ $# -gt 0 ]; then
         tmux "$@"
     elif tmux ls 2> /dev/null | grep -vq attached; then
@@ -78,11 +25,11 @@ tm () {
     else
         tmux new-session
     fi
-    cd .
+    update_terminal_title
 }
 
 # Run the system update in a tmux session
-update () {
+update() {
     if [ -n "${TMUX:-}" ]; then
         yay
     elif tmux has-session -t 'Update' 2> /dev/null; then
@@ -90,7 +37,7 @@ update () {
     else
         tmux new-session -s 'Update' \; send-keys 'yay' C-m
     fi
-    cd .
+    update_terminal_title
 }
 
 # Use fd (https://github.com/sharkdp/fd) instead of the default find
