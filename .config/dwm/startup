@@ -13,6 +13,7 @@ easyeffects --gapplication-service &
 set-chromium-frame off &
 set-firefox-titlebar off &
 udiskie &
+lf -server &
 dwm-lock start &
 
 # dwm exit codes: 0 = quit, 100 = restart, 101 = poweroff, 102 = reboot
@@ -24,7 +25,8 @@ setbg --clear
 #xsetroot -cursor_name watch 2>/dev/null
 dwm-lock stop
 killall -q xsettingsd polkit-gnome-authentication-agent-1
-killall -q picom dunst dsblocks pactl easyeffects udiskie lf
+killall -q picom dunst dsblocks pactl easyeffects udiskie
+killall -q lf; rm -f "${XDG_RUNTIME_DIR}"/lf.*.sock
 sleep 0.1
 
 case $exitcode in

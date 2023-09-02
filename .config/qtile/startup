@@ -12,6 +12,7 @@ set-chromium-frame off &
 set-firefox-titlebar off &
 sxhkd &
 udiskie &
+lf -server &
 qtile-lock start &
 
 shutdown_cmd="${XDG_RUNTIME_DIR:-/tmp}/qtile-shutdown-cmd"
@@ -24,7 +25,8 @@ setbg --clear
 # xsetroot -cursor_name watch 2>/dev/null
 qtile-lock stop
 killall -q xsettingsd polkit-gnome-authentication-agent-1
-killall -q picom dunst dsblocks pactl easyeffects sxhkd udiskie lf
+killall -q picom dunst dsblocks pactl easyeffects sxhkd udiskie
+killall -q lf; rm -f "${XDG_RUNTIME_DIR}"/lf.*.sock
 sleep 0.1
 
 case "$(cat "$shutdown_cmd")" in
