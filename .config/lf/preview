@@ -98,20 +98,14 @@ case "$(readlink -f "$1")" in
         nm "$1" ;;
     *.md)
         glow -s dark "$1" ;;
-    *.tar.zst|*.tzst)
-        tar -I zstd -t${verbose}f "$1" ;;
-    *.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz)
-        tar -t${verbose}f "$1" ;;
-    *.zip)
-        [ -n "$verbose" ] && zipinfo "$1" || zipinfo -1 "$1" ;;
-    *.rar)
-        [ -n "$verbose" ] && unrar l "$1" || unrar lb "$1" ;;
+    *.7z|*.deb|*.iso|*.jar|*.rar|*.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
+        LC_TIME=en_US.UTF-8 bsdtar -t${verbose}f "$1" ;;
     *.gz)
-        [ -n "$verbose" ] && gunzip -l -v "$1" || gunzip -l "$1" ;;
-    *.7z|*.iso|*.jar)
-        7z l "$1" ;;
-    *.deb)
-        ar t${verbose} "$1" ;;
+        gunzip -l${verbose} "$1" ;;
+    *.xz)
+        unxz -l${verbose} "$1" ;;
+    *.zst)
+        unzstd -l${verbose} "$1" 2>&1 ;;
     *.AppImage|*.appimage)
         [ -n "$verbose" ] && preview_appimage "$1" 2>/dev/null || batorcat "$1" ;;
     *.torrent)

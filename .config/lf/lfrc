@@ -1,14 +1,13 @@
 # Required tools - lf:
-# 7z (p7zip)
-# ar (binutils)
+# bsdtar (libarchive)
 # coreutils
 # dash
 # gunzip (gzip)
-# tar
 # trash-cli
 # unrar
 # unxz (xz)
 # unzip
+# unzstd (zstd)
 # vidir (moreutils)
 # dragon-drop (optional) - https://github.com/mwh/dragon
 # fzf (optional)
@@ -17,8 +16,7 @@
 # xclip (optional)
 #
 # Required tools - previewer:
-# 7z (p7zip)
-# ar (binutils)
+# bsdtar (libarchive)
 # catdoc
 # convert (imagemagick)
 # docx2txt
@@ -27,10 +25,9 @@
 # mediainfo or exiftool
 # odt2txt
 # pdftotext
-# tar
 # tree
-# unrar
-# zipinfo
+# unxz (xz)
+# unzstd (zstd)
 # bat (optional)
 # chafa (optional)
 # highlight (optional)
@@ -425,7 +422,7 @@ cmd unarchive-to &{{
     case "$f" in
         *.tar.bz|*.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst)
             f=$(printf '%s' "$f" | sed -e 's/\.tar\.[[:alnum:]]\{2,3\}$//') ;;
-        *.7z|*.gz|*.xz|*.deb|*.iso|*.jar|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
+        *.7z|*.deb|*.gz|*.iso|*.jar|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.xz|*.zip|*.zst)
             f=$(printf '%s' "$f" | sed -e 's/\.[[:alnum:]]\{2,4\}$//') ;;
         *.AppImage|*.appimage)
             if [ ! -x "$f" ]; then
@@ -448,7 +445,7 @@ cmd unarchive-here &{{
     f=$(basename -- "$f")
     case "$f" in
         *.tar.bz|*.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst) ;;
-        *.7z|*.gz|*.xz|*.deb|*.iso|*.jar|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip) ;;
+        *.7z|*.deb|*.gz|*.iso|*.jar|*.rar|*.tar|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.xz|*.zip|*.zst) ;;
         *.AppImage|*.appimage)
             if [ ! -x "$f" ]; then
                 lf -remote "send $id echoerr AppImage is not executable : cannot extract files!"
@@ -483,15 +480,14 @@ cmd unarchive ${{
     fi
     oldfiles=$(ls --group-directories-first -A)
     case "$f" in
-        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f -C $targetdir ;;
-        *.tar.gz|*.tgz) tar xzvf $f -C $targetdir ;;
-        *.tar.xz|*.txz) tar xJvf $f -C $targetdir ;;
-        *.tar.zst|*.tzst) tar -I zstd -xvf $f -C $targetdir ;;
-        *.tar) tar xvf $f -C $targetdir ;;
-        *.zip) unzip $f -d $targetdir ;;
-        *.rar) unrar x $f $targetdir ;;
-        *.7z|*.iso|*.jar) 7z x $f -o$targetdir ;;
-        *.deb) cd -- $targetdir; ar xv $f; cd - >/dev/null ;;
+        *.7z|*.deb|*.iso|*.jar|*.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst)
+            bsdtar -xvf "$f" -C "$targetdir" ;;
+        *.rar)
+            unrar x $f $targetdir ;;
+        *.zip)
+            unzip $f -d $targetdir ;;
+        *.zst)
+            unzstd $f --output-dir-flat $targetdir ;;
         *.gz|*.xz)
             if [ "$targetdir" != "." ]; then
                 cp -- $f $targetdir
@@ -512,8 +508,10 @@ cmd unarchive ${{
             $f --appimage-extract
             [ "$targetdir" != "." ] && mv -- squashfs-root $targetdir
             ;;
-        *) lf -remote "send $id echoerr Unsupported format!"
-           exit 0;;
+        *)
+            lf -remote "send $id echoerr Unsupported format!"
+            exit 0
+            ;;
     esac
     lf -remote "send reload"
     lf -remote "send $id unselect"
@@ -541,190 +539,55 @@ cmd unarchive ${{
     lf -remote "send $id echo Done"
 }}
 
-# Compress files using relative mode
+# Compress files
 cmd compress ${{
     set -f
-    # get compression format
+    verbose='v' # v or empty
+
+    # get extension and mode
     ext=$1
-    verbose='v'  # v or empty
+    mode='relative' && [ -n "${2:-}" ] && mode='flat'
     case "$ext" in
-        tar)     taropt="-${verbose}cf" ;;
-        tar.gz)  taropt="-${verbose}zcf" ;;
-        tar.xz)  taropt="-${verbose}Jcf" ;;
-        tar.zst) taropt="-$(printf 'I\nzstd\n-%scf' "$verbose")" ;;
-	    zip)     taropt='' ;;
-        *) lf -remote "send $id echoerr Unknown compression format!"
-           exit 0 ;;
+        tar|tar.gz|tar.xz|tar.zst|zip) ;;
+        *)  lf -remote "send $id echoerr Unknown compression format!"
+            exit 0 ;;
     esac
 
-    # convert absolute paths to relative paths
-    pwdsed=$(printf '%s' "$PWD/" | sed -e 's/[]\/$*.^[]/\\&/g')
-    files=$(printf '%s' "$fx" | sed -e "s/^$pwdsed//")
+    printf "\nCompressing following object(s) using the $mode mode:\n"
 
-    printf '\n-------------------------------'
-    printf '\nSelected object(s):\n'
-    err=0
-    for f in $files; do
-        printf '%s' "$f"
-        case "$f" in
-            '/'*) printf ' (*)\n'; err=1 ;;
-            *)    printf '\n' ;;
-        esac
-    done
-    printf '\n'
+    if [ "$mode" = "relative" ]; then
+        # convert absolute paths to relative paths
+        files='' err=0
+        for f in $fx; do
+            f=${f#$PWD/}
+            printf '%s' "$f"
+            case "$f" in
+                '/'*) printf ' (*)\n'; err=1 ;;
+                *)    printf '\n' ;;
+            esac
+            [ -z "$files" ] && files=$f || files=$(printf '%s\n%s' "$files" "$f")
+        done
+        printf '\n'
 
-    if [ "$err" -gt 0 ]; then
-        printf "Error: (*) Some objects can't be found in current working directory or its subdirectories.\n"
-        printf 'Check objects or try absolute mode: '
-        case "$ext" in
-            tar)     printf 'aT\n' ;;
-            tar.gz)  printf 'aG\n' ;;
-            tar.xz)  printf 'aX\n' ;;
-            tar.zst) printf 'aS\n' ;;
-            *)       printf 'aZ\n' ;;
-        esac
-        printf 'Press enter to continue'
-        read -r ans
-        exit 0
-    fi
-
-    # read archive name
-    while true; do
-        printf 'Archive name (without .%s): ' $ext
-        read -r aname
-        aname=$(printf '%s' "$aname" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        case "$aname" in
-            *'<'*|*'>'*|*'|'*|*'\'*|*'*'*)
-                printf 'Invalid archive name! Do not use characters: <, >, |, \\, *\n\n'
-                ;;
-            '') lf -remote "send $id echo Aborted!"
-                exit 0
-                ;;
-            *) break ;;
-        esac
-    done
-
-    # read directory name
-    while true; do
-        printf 'Directory in archive: '
-        read -r adir
-        adir=$(printf '%s' "$adir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        case "$adir" in
-            *'<'*|*'>'*|*'|'*|*'\'*|*'*'*)
-                printf 'Invalid directory name! Do not use characters: <, >, |, \\, *\n\n'
-                ;;
-            '/'*)
-                printf 'Invalid directory name! Do not use absolute paths!\n\n'
-                ;;
-            '../'*)
-                printf 'Invalid directory name! Do not use parent directory!\n\n'
-                ;;
-            '.'|'..')
-                printf 'Invalid directory name!\n\n'
-                ;;
-            ''|*'/')
-                break ;;
-            *)  adir="$adir/";
-                break ;;
-        esac
-    done
-    adirsed=$(printf '%s' "$adir" | sed -e 's/[\/&]/\\&/g')
-
-    # check if archive already exists
-    if [ -f "$aname.$ext" ]; then
-        printf "Archive $aname.$ext already exists. Update archive? [y/N] "
-        read -r ans
-        if [ "$ans" != "y" ] && [ "$ans" != "Y" ]; then
-            lf -remote "send $id echo Aborted!"
-            exit 0
-        fi
-        # check if tar archive already exists and format is tar.*
-        if [ -f "$aname.tar" ] && [ "$ext" != "tar" ] && [ "$ext" != "zip" ]; then
-            printf "Error: Can't compress archive $aname.$ext, because archive $aname.tar exists!\n"
+        if [ $err -gt 0 ]; then
+            printf "Error: (*) Some objects can't be found in current working directory or its subdirectories.\n"
+            printf 'Try flat mode: '
+            case "$ext" in
+                tar)     printf 'aT. ' ;;
+                tar.gz)  printf 'aG. ' ;;
+                tar.xz)  printf 'aX. ' ;;
+                tar.zst) printf 'aS. ' ;;
+                *)       printf 'aZ. ' ;;
+            esac
+            printf 'It compresses files and directories without a path.\n'
             printf 'Press enter to continue'
             read -r ans
             exit 0
         fi
-        # tar.* must be uncompressed before update
-        case "$ext" in
-            tar.gz) gunzip -- $aname.$ext ;;
-            tar.xz) xz -d -- $aname.$ext ;;
-            tar.zst) zstd -d -q --rm -- $aname.$ext ;;
-            *) ;;
-        esac
-        if [ "$ext" != "zip" ]; then
-            # delete old files, because newer files don't replace old files,
-            # but instead are appended to the end of archive
-            set +e
-            oldfiles=$(printf '%s' "$fx" | sed -e "s/^$pwdsed/$adirsed/")
-            tar f $aname.tar --delete -- $oldfiles 2> /dev/null
-            set -e
-            taropt="-${verbose}uf"
-        fi
-    fi
-
-    printf "Compressing $aname.$ext ...\n"
-
-    if [ "$ext" = "zip" ]; then
-        # create/update zip archive
-        [ -n "$verbose" ] && quiet='' || quiet='-q'
-        if [ -n "$adir" ]; then
-            tmp=$(mktemp -d) || exit 1
-            mkdir -p $tmp/$adir
-            cp -a --parents $files $tmp/$adir
-            workdir=$PWD
-            cd $tmp
-            zip -r $quiet $workdir/$aname.$ext $adir
-            cd $workdir
-            rm -rf $tmp
-        else
-            zip -r $quiet $aname.$ext -- $files
-        fi
-    elif [ "$taropt" = "-${verbose}uf" ]; then
-        # update tar or tar.* archive
-        tar $taropt $aname.tar --absolute-names --transform="s/^$pwdsed/$adirsed/S" -- $fx
-        case "$ext" in
-            tar.gz) gzip -- $aname.tar ;;
-            tar.xz) xz -z -- $aname.tar ;;
-            tar.zst) zstd -z -q --rm -- $aname.tar ;;
-            *) ;;
-        esac
     else
-        # create tar or tar.* archive
-        tar $taropt $aname.$ext --absolute-names --transform="s/^$pwdsed/$adirsed/S" -- $fx
+        files=$fx
+        printf '%s\n\n' "$files"
     fi
-
-    aname=$(printf '%s' "$aname" | sed 's/\\/\\\\/g;s/"/\\"/g');
-    lf -remote "send reload"
-    lf -remote "send $id unselect"
-    lf -remote "send $id select \"$aname.$ext\""
-
-    printf 'Done\n\nPress enter to continue'
-    read -r ans
-}}
-
-# Compress files using absolute mode
-cmd acompress ${{
-    set -f
-    # get compression format
-    ext=$1
-    verbose='v'  # v or empty
-    case "$ext" in
-        tar)     taropt="-${verbose}cf" ;;
-        tar.gz)  taropt="-${verbose}cf" ;;
-        tar.xz)  taropt="-${verbose}cf" ;;
-        tar.zst) taropt="-${verbose}cf" ;;
-	    zip)     taropt='' ;;
-        *) lf -remote "send $id echoerr Unknown compression format!"
-           exit 0 ;;
-    esac
-
-    printf '\n-------------------------------'
-    printf '\nSelected object(s):\n'
-    for f in $fx; do
-        printf '%s\n' "$f"
-    done
-    printf '\n'
 
     # read archive name
     while true; do
@@ -744,7 +607,7 @@ cmd acompress ${{
 
     # read directory name
     while true; do
-        printf 'Directory in archive: '
+        printf 'Destination directory in archive: '
         read -r adir
         adir=$(printf '%s' "$adir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         case "$adir" in
@@ -766,15 +629,8 @@ cmd acompress ${{
                 break ;;
         esac
     done
-    adirsed=$(printf '%s' "$adir" | sed -e 's/[\/&]/\\&/g')
 
-    # check if tar archive already exists and format is tar.*
-    if [ -f "$aname.tar" ] && [ "$ext" != "tar" ] && [ "$ext" != "zip" ]; then
-        printf "Error: Can't compress archive $aname.$ext, because archive $aname.tar exists!\n"
-        printf 'Press enter to continue'
-        read -r ans
-        exit 0
-    fi
+    tmp=$(mktemp -d) || exit 1
 
     # check if archive already exists
     if [ -f "$aname.$ext" ]; then
@@ -782,62 +638,33 @@ cmd acompress ${{
         read -r ans
         if [ "$ans" != "y" ] && [ "$ans" != "Y" ]; then
             lf -remote "send $id echo Aborted!"
+            rm -rf $tmp
             exit 0
         fi
-        # tar.* must be uncompressed before update
-        case "$ext" in
-            tar.gz) gunzip -- $aname.$ext ;;
-            tar.xz) xz -d -- $aname.$ext ;;
-            tar.zst) zstd -d -q --rm -- $aname.$ext ;;
-            *) ;;
-        esac
-        taropt="-${verbose}uf"
+        if [ "$ext" = "zip" ]; then
+            unzip $aname.$ext -d $tmp >/dev/null || exit 1
+        else
+            bsdtar -xf $aname.$ext -C $tmp >/dev/null || exit 1
+        fi
+        rm -rf $aname.$ext
     fi
 
-    printf "Compressing $aname.$ext ...\n"
-
-    if [ "$ext" != "zip" ] || [ "$adir" = '' ]; then
-        # create/update tar file or zip file without adir
-        workdir=$PWD
-        for f in $fx; do
-            fname=$(basename -- "$f")
-            cd $(dirname -- "$f")
-            if [ "$ext" != "zip" ]; then
-                if [ "$taropt" = "-${verbose}uf" ]; then
-                    # delete old files, because newer files don't replace old files,
-                    # but instead are appended to the end of archive
-                    set +e
-                    oldfile=$(printf '%s' "$fname" | sed -e "s/^/$adirsed/")
-                    tar f $workdir/$aname.tar --delete -- $oldfile 2> /dev/null
-                    set -e
-                fi
-                tar $taropt $workdir/$aname.tar --absolute-names --transform="s/^/$adirsed/S" -- $fname
-                taropt="-${verbose}uf"
-            else
-                [ -n "$verbose" ] && quiet='' || quiet='-q'
-                zip -r $quiet $workdir/$aname.$ext -- $fname
-            fi
-        done
-        cd $workdir
-        case "$ext" in
-            tar.gz) gzip -- $aname.tar ;;
-            tar.xz) xz -z -- $aname.tar ;;
-            tar.zst) zstd -z -q --rm -- $aname.tar ;;
-            *) ;;
-        esac
+    # compress
+    [ -n "$adir" ] && mkdir -p $tmp/$adir
+    parent='--parent' && [ "$mode" = "flat" ] && parent=''
+    printf '%s' "$files" | tr '\n' '\0' | xargs -0 cp $parent -a -t $tmp/$adir --
+    workdir=$PWD
+    cd $tmp
+    if [ "$ext" = "zip" ]; then
+        q='' && [ -z "$verbose" ] && q='-q'
+        find . -maxdepth 1 -printf "%P\n" | zip $q -r $workdir/$aname.$ext -@
     else
-        # create/update zip file with adir
-        [ -n "$verbose" ] && quiet='' || quiet='-q'
-        tmp=$(mktemp -d) || exit 1
-        mkdir -p $tmp/$adir
-        cp -a $fx $tmp/$adir
-        workdir=$PWD
-        cd $tmp
-        zip -r $quiet $workdir/$aname.$ext $adir
-        cd $workdir
-        rm -rf $tmp
+        find . -maxdepth 1 -printf "%P\n" | bsdtar -a${verbose}cf $workdir/$aname.$ext -T -
     fi
+    cd $workdir
+    rm -rf $tmp
 
+    # select archive
     aname=$(printf '%s' "$aname" | sed 's/\\/\\\\/g;s/"/\\"/g');
     lf -remote "send reload"
     lf -remote "send $id unselect"
@@ -1053,11 +880,11 @@ map ag compress tar.gz
 map ax compress tar.xz
 map as compress tar.zst
 map az compress zip
-map aT acompress tar
-map aG acompress tar.gz
-map aX acompress tar.xz
-map aS acompress tar.zst
-map aZ acompress zip
+map aT compress tar --flat
+map aG compress tar.gz --flat
+map aX compress tar.xz --flat
+map aS compress tar.zst --flat
+map aZ compress zip --flat
 map au unarchive-to
 map aU unarchive-here
 
