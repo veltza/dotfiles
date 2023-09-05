@@ -297,7 +297,7 @@ cmd trash ${{
         trash-put -- $fx
         #lf -remote "send clear"
         lf -remote "send reload"
-        lf -remote "send $id echo Done" 
+        lf -remote "send $id echo Done"
     fi
 }}
 
@@ -357,7 +357,6 @@ cmd sudoedit ${{
         cat $tmp
     fi
     rm $tmp
-    set -e
 }}
 
 cmd suedit ${{
@@ -406,7 +405,7 @@ cmd checksums ${{
     printf 'Press enter to continue'; read -r ans
 }}
 
-cmd md5 checksum md5sum 
+cmd md5 checksum md5sum
 cmd md5sum md5
 cmd sha256 checksum sha256sum
 cmd sha256sum sha256
@@ -651,8 +650,8 @@ cmd compress ${{
 
     # compress
     [ -n "$adir" ] && mkdir -p $tmp/$adir
-    parent='--parent' && [ "$mode" = "flat" ] && parent=''
-    printf '%s' "$files" | tr '\n' '\0' | xargs -0 cp $parent -a -t $tmp/$adir --
+    parents='--parents' && [ "$mode" = "flat" ] && parents=''
+    printf '%s' "$files" | tr '\n' '\0' | xargs -0 cp $parents -a -t $tmp/$adir --
     workdir=$PWD
     cd $tmp
     if [ "$ext" = "zip" ]; then
@@ -780,9 +779,9 @@ cmd ca %{{
     elif [ $# -eq 1 ] && [ -d "$1" ]; then
         result=$1
     else
-	    result="$(zoxide query --exclude $PWD -- $@)"
+        result="$(zoxide query --exclude $PWD -- $@)"
     fi
-	lf -remote "send $id cd $result"
+    lf -remote "send $id cd $result"
 }}
 
 cmd ci ${{
@@ -790,11 +789,11 @@ cmd ci ${{
     if [ $# -eq 1 ] && [ -d "$1" ]; then
         result=$1
     else
-	    result="$(zoxide query -i --exclude $PWD -- $@)"
-	    if [ $? -eq 1 ]; then
-	        lf -remote "send echo zoxide: no match found"
-	       exit
-	    fi
+        result="$(zoxide query -i --exclude $PWD -- $@)"
+        if [ $? -eq 1 ]; then
+            lf -remote "send echo zoxide: no match found"
+            exit
+        fi
     fi
     [ -z "$result" ] || lf -remote "send $id cd $result"
 }}
