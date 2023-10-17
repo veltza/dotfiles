@@ -9,9 +9,12 @@
 # unzip
 # unzstd (zstd)
 # vidir (moreutils)
+# curl (optional)
 # dragon-drop (optional) - https://github.com/mwh/dragon
+# fuse-archive (optional) - https://github.com/google/fuse-archive
 # fzf (optional)
 # hexedit (optional)
+# wget (optional)
 # wmctrl (optional)
 # xclip (optional)
 #
@@ -41,10 +44,10 @@ set icons
 set ignorecase
 set preview
 set previewer ~/.config/lf/preview
-set cleaner ~/.config/lf/cleaner
 set scrolloff 4
 set tagfmt "\033[33m%s\033[0m"
 set cursorpreviewfmt "\033[7;90;40m"
+set sixel
 
 # Shell settings
 set shell dash
@@ -72,6 +75,18 @@ cmd on-cd &{{
     lf -remote "send $id set promptfmt \"$fmt\""
 }}
 
+cmd on-quit ${{
+    set +e
+    awk '$1 == "fuse-archive" {
+        a["040"]=" "; a["011"]="\t"; a["134"]="\\"; # a["012"]="\n"
+        for (c in a) gsub("\\\\" c, a[c], $2)
+        print $2
+        } ' /etc/mtab |
+    while read -r mntdir; do
+        fusermount -u "$mntdir" && rmdir "$mntdir"
+    done
+}}
+
 cmd open ${{
     set -f
     test -L "$f" && f=$(readlink -f "$f")
@@ -86,6 +101,20 @@ cmd open ${{
         set +e; $chksum -c "$f"
         set -e; printf 'Press enter to continue'; read -r ans
         exit 0
+    fi
+    if command -v fuse-archive >/dev/null; then
+        case "$f" in
+            *.7z|*.deb|*.iso|*.jar|*.rar|*.tar|*.tar.??|*.tar.???|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
+                mntdir="$f-fusearchive"
+                if [ ! -d "$mntdir" ]; then
+                    mkdir "$mntdir"
+                    fuse-archive "$f" "$mntdir"
+                fi
+                mntdir="$(printf '%s' "$mntdir" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+                lf -remote "send $id cd \"$mntdir\""
+                lf -remote "send $id reload"
+                exit ;;
+        esac
     fi
     case $(file --mime-type "$f" -b) in
         text/*|application/json|inode/x-empty) $EDITOR "$f";;
@@ -272,17 +301,8 @@ cmd chitem ${{
 
 cmd bulkrename ${{
     [ -z "$fx" ] && exit
-    set -f
-    files=''
-    cwd=$PWD
-    for f in $fx; do
-        fname=$(basename -- "$f")
-        fpath=$(dirname -- "$f")
-        files=$(printf '%s\n%s' "$files" "$fname")
-        [ "$fpath" != "$cwd" ] && cwd='' && break
-    done
-    [ -n "$cwd" ] && fx=${files#?}
-    printf '%s\n' "$fx" | vidir -
+    cwd=$(printf '%s' "$PWD" | sed -e 's/[]\/$*.^[]/\\&/g')
+    printf '%s\n' "$fx" | sed -e "s|^$cwd/||" | vidir -
     lf -remote "send reload"
     lf -remote "send $id unselect"
 }}
@@ -720,7 +740,12 @@ cmd drag-receive ${{
                 cp -- "$url" "$name"
             fi
         else
-            curl -o "$name" "$url"
+            case "$url" in
+                http://*|https://*|ftp://*)
+                    wget -O "$name" "$url" ;;
+                *)
+                    curl -o "$name" "$url" ;;
+            esac
         fi
         last=$(printf '%s' "$name" | sed 's/\\/\\\\/g;s/"/\\"/g');
     done
@@ -758,7 +783,7 @@ cmd download-file ${{
             break
         fi
     done
-    curl -o "$name" "$url"
+    wget -O "$name" "$url"
     name=$(printf '%s' "$name" | sed 's/\\/\\\\/g;s/"/\\"/g');
     lf -remote "send reload"
     lf -remote "send $id select \"$name\""

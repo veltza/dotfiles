@@ -12,14 +12,13 @@ exists() {
 }
 
 preview_image() {
-    if [ -z "$verbose" ] && [ -n "$FIFO_UEBERZUG" ]; then
-        printf '{"action": "add", "identifier": "PREVIEW", "x": "%s", "y": "%s", "width": "%s", "height": "%s", "scaler": "contain", "path": "%s"}\n' "$(($4+1))" "$5" "$(($2-2))" "$(($3-1))" "$1" > "$FIFO_UEBERZUG"
-        exit 1
-    elif [ -z "$verbose" ] && exists chafa; then
-        [ -n "${TMUX:-}" ] && c=240 || c=full
-        [ "$2" -le 0 ] && w=$(tput cols) || w=$(($2-4))
-        [ "$3" -le 0 ] && h=$(($(tput lines)-1)) || h=$3
-        chafa -c $c -s ${w}x${h} -f symbols "$1"
+    if [ -z "$verbose" ] && exists chafa; then
+        if [ -n "${TMUX:-}" ]; then
+            chafa -s "${2}x${3}" -f symbols --animate false "$1"
+            exit 0
+        fi
+        w=$2 && [ $w -gt 70 ] && w=70
+        chafa -s "${w}x${3}" -f sixels --animate false --dither ordered --dither-intensity 0.85 "$1"
     else
         preview_mediainfo "$1"
     fi
@@ -70,18 +69,8 @@ batorcat() {
 }
 
 case "$(readlink -f "$1")" in
-    *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.webp)
+    *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.tiff|*.webp)
         preview_image "$1" "$2" "$3" "$4" "$5" ;;
-    *.six|*.svg|*.xpm)
-        cachefile=$1
-        if [ -n "$FIFO_UEBERZUG" ] && exists convert; then
-            iname=$(basename "$1")
-            cachefile="${FIFO_UEBERZUG%/fifo}/image-${iname%.*}.jpg"
-            convert "$1" "$cachefile"
-        fi
-        preview_image "$cachefile" "$2" "$3" "$4" "$5" ;;
-    *.tiff)
-        preview_mediainfo "$1" ;;
     *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
         preview_mediainfo "$1" ;;
     *.pdf)
@@ -98,7 +87,7 @@ case "$(readlink -f "$1")" in
         nm "$1" ;;
     *.md)
         glow -s dark "$1" ;;
-    *.7z|*.deb|*.iso|*.jar|*.rar|*.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
+    *.7z|*.deb|*.iso|*.jar|*.rar|*.tar|*.tar.??|*.tar.???|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
         LC_TIME=en_US.UTF-8 bsdtar -t${verbose}f "$1" ;;
     *.gz)
         gunzip -l${verbose} "$1" ;;
