@@ -1,12 +1,12 @@
 # Alias for lf
 lf() {
-    lfrun "$@"
+    command lf "$@"
     update_terminal_title
 }
 
 # Change working dir in shell to last dir in lf on exit (adapted from ranger).
 lfcd() {
-    lfrun -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lfcd-last-dir-path" "$@" && cdlf
+    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lfcd-last-dir-path" "$@" && cdlf
     update_terminal_title
 }
 
