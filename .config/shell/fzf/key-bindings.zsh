@@ -11,6 +11,9 @@
 # - $FZF_ALT_C_COMMAND
 # - $FZF_ALT_C_OPTS
 
+[[ -o interactive ]] || return 0
+
+
 # Key bindings
 # ------------
 
@@ -32,11 +35,9 @@ else
   }
 fi
 
-'emulate' 'zsh' '-o' 'no_aliases'
+'builtin' 'emulate' 'zsh' && 'builtin' 'setopt' 'no_aliases'
 
 {
-
-[[ -o interactive ]] || return 0
 
 # CTRL-T - Paste the selected file path(s) into the command line
 __fsel() {
@@ -59,7 +60,7 @@ __fsel() {
   fi
   setopt localoptions pipefail no_aliases 2> /dev/null
   local item
-  eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --bind=ctrl-z:ignore ${FZF_DEFAULT_OPTS-} ${FZF_CTRL_T_OPTS-}" $(__fzfcmd) -m "$@" | while read item; do
+  eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --scheme=path --bind=ctrl-z:ignore ${FZF_DEFAULT_OPTS-} ${FZF_CTRL_T_OPTS-}" $(__fzfcmd) -m "$@" | while read item; do
     echo -n "${(q)item} "
   done
   local ret=$?
@@ -103,7 +104,7 @@ fzf-cd-widget() {
     fi
   fi
   setopt localoptions pipefail no_aliases 2> /dev/null
-  local dir="$(eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --bind=ctrl-z:ignore ${FZF_DEFAULT_OPTS-} ${FZF_ALT_C_OPTS-}" $(__fzfcmd) +m)"
+  local dir="$(eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --scheme=path --bind=ctrl-z:ignore ${FZF_DEFAULT_OPTS-} ${FZF_ALT_C_OPTS-}" $(__fzfcmd) +m)"
   if [[ -z "$dir" ]]; then
     zle redisplay
     return 0
