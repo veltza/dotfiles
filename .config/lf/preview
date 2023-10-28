@@ -13,7 +13,7 @@ exists() {
 
 preview_image() {
     if [ -z "$verbose" ] && exists chafa; then
-        if [ -n "${TMUX:-}" ]; then
+        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
             chafa -s "${2}x${3}" -f symbols --animate false "$1"
             exit 0
         fi

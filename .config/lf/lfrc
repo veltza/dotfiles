@@ -66,13 +66,14 @@ cmd on-cd &{{
 
     # Show git branch in prompt
     set +e
+    warning="" && [ $LF_LEVEL -ne 1 ] && warning="%S\033[41;1mWarning: You're in a nested lf instance!\033[0m"
     fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
     branch="$(git symbolic-ref --short HEAD 2>/dev/null)" || \
     branch="tags/$(git describe --tags --exact-match HEAD 2>/dev/null)" || \
     #branch="$(git describe --contains HEAD 2>/dev/null)" || \
     branch="$(git name-rev --name-only --no-undefined --always HEAD 2>/dev/null)"
-    [ -n "$branch" ] && { lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m\""; return; }
-    lf -remote "send $id set promptfmt \"$fmt\""
+    [ -n "$branch" ] && { lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m$warning\""; return; }
+    lf -remote "send $id set promptfmt \"$fmt$warning\""
 }}
 
 cmd on-quit ${{
@@ -873,7 +874,7 @@ map br bulkrename
 map e $set -f; case "$EDITOR" in ?vim) $EDITOR -p $fx;; *) $EDITOR $fx;; esac
 map E sudoedit
 map <a-e> suedit
-map I open-with sxiv
+map I open-with nsxiv
 
 # Navigation
 map <a-c> fzf_jump
@@ -926,13 +927,11 @@ map g.d cd ~/.dwm
 map g.l cd ~/.local
 map gtr cd ~/.local/share/Trash/files
 
-%[ $LF_LEVEL -eq 1 ] || echo "Warning: You're in a nested lf instance!"
-
 # Wait till lf server is up and running and update the prompt
 ${{
-    preview="preview" && [ "$lf_preview" = "false" ] && preview="nopreview"
+    icons="icons" && [ -z "${DISPLAY:-}" ] && icons="noicons" # no icons on tty/ssh
     for i in 1 2 3 4 5 6 7 8 9 10; do
-        [ -z "$(lf -remote "send $id set $preview" 2>&1)" ] && break || sleep 0.2
+        [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
     done
 }}
 :on-cd
