@@ -1,15 +1,16 @@
 #!/bin/sh
 
-ID=`xinput list | grep -Eio '(touchpad|glidepoint)\s*id\=[0-9]{1,2}' | grep -Eo '[0-9]{1,2}'`
-STATE=`xinput list-props $ID | grep 'Device Enabled' | awk '{print $4}'`
+ID=`xinput list | grep -Eio '(touchpad|glidepoint)\s*id=[0-9]{1,2}' | grep -Eo '[0-9]{1,2}'`
+STATE=`xinput list-props $ID | grep 'Device Enabled' | grep -o '[01]$'`
 
-if [ $STATE -eq 1 ]
-then
-    xinput disable $ID
-    echo "Touchpad disabled"
-    notify-send -t 2000 'Touchpad' 'Disabled' -i notification-touchpad-disabled-symbolic
+if [ $STATE -eq 1 ]; then
+    if xinput disable $ID; then
+        echo "Touchpad disabled"
+        notify-send -t 2000 'Touchpad' 'Disabled' -i notification-touchpad-disabled-symbolic
+    fi
 else
-    xinput enable $ID
-    echo "Touchpad enabled"
-    notify-send -t 2000 'Touchpad' 'Enabled' -i notification-input-touchpad-symbolic
+    if xinput enable $ID; then
+        echo "Touchpad enabled"
+        notify-send -t 2000 'Touchpad' 'Enabled' -i notification-input-touchpad-symbolic
+    fi
 fi

@@ -17,10 +17,11 @@ xmenu.selforeground: #FFFFFF
 xmenu.border: #8C8C8C
 xmenu.separator: #CDC7C2
 
-Sxiv.foreground: #FFFFFF
-Sxiv.background: #000000
-!Sxiv.font: Fira Sans:size=10.0
-Sxiv.font: Roboto:size=9.75
+Nsxiv.bar.font: Roboto:size=9.75
+Nsxiv.bar.foreground: #F8F8F8
+Nsxiv.mark.foreground: #CC00CC
+Nsxiv.window.foreground: #E5E5E5
+Nsxiv.window.background: #000000
 
 dmenu.foreground: #D0E5E8
 dmenu.background: #07070d
