@@ -14,11 +14,11 @@ exists() {
 preview_image() {
     if [ -z "$verbose" ] && exists chafa; then
         if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
-            chafa -s "${2}x${3}" -f symbols --animate false "$1"
+            chafa -s "${2}x${3}" -f symbols --animate false --polite on "$1"
             exit 0
         fi
         w=$2 && [ $w -gt 70 ] && w=70
-        chafa -s "${w}x${3}" -f sixels --animate false --dither ordered --dither-intensity 0.85 "$1"
+        chafa -s "${w}x${3}" -f sixels --animate false --polite on --dither ordered --dither-intensity 0.85 "$1"
     else
         preview_mediainfo "$1"
     fi
