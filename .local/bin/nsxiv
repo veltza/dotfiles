@@ -1,0 +1,5 @@
+#!/bin/dash
+
+NSXIV_OPTS=${NSXIV_OPTS:-"-ao"}
+
+exec /usr/local/bin/nsxiv $NSXIV_OPTS "$@"
