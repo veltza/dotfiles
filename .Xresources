@@ -8,7 +8,7 @@ Xft.hintstyle:	hintslight
 Xft.lcdfilter:	lcddefault
 Xft.rgba:	rgb
 
-xmenu.font: JetBrainsMono NF:style=Medium:size=9
+xmenu.font: JetBrainsMono Nerd Font:style=Medium:size=9
 xmenu.background: #222222
 xmenu.foreground: #FFFFFF
 xmenu.selbackground: #3584E4
@@ -32,6 +32,8 @@ St.font:            monospace:size=10:antialias=true:autohint=true
 St.font_fallback1:  JoyPixels:size=10:antialias=true:autohint=true
 St.font_fallback2:  Liberation Mono:size=10.5:antialias=true:autohint=true
 St.font_fallback3:  Symbola:size=13.5:antialias=true:autohint=true
+St.cols:            114
+St.rows:            34
 St.borderpx:        2
 St.alpha:           1.0
 St.alphaUnfocused:  1.0
