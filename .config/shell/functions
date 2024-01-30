@@ -31,13 +31,23 @@ tm() {
 # Run the system update in a tmux session
 update() {
     if [ -n "${TMUX:-}" ]; then
-        yay
+        system-update
     elif tmux has-session -t 'Update' 2> /dev/null; then
-        tmux attach-session -t 'Update' \; new-window \; send-keys 'yay' C-m
+        tmux attach-session -t 'Update' \; new-window \; send-keys "system-update" C-m
     else
-        tmux new-session -s 'Update' \; send-keys 'yay' C-m
+        tmux new-session -s 'Update' \; send-keys "system-update" C-m
     fi
     update_terminal_title
+}
+
+system-update() {
+    if command -v yay &>/dev/null; then
+        yay -Pw 2>/dev/null; yay
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -Syu
+    else
+        aupdate
+    fi
 }
 
 # Use fd (https://github.com/sharkdp/fd) instead of the default find
