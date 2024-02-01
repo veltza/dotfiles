@@ -1,5 +1,6 @@
 #!/bin/dash
 
+f=$(readlink -f "$1")
 [ "$6" = "verbose" ] && verbose='v' || verbose=''
 
 if [ -d "$1" ]; then
@@ -12,20 +13,25 @@ exists() {
 }
 
 preview_image() {
-    if [ -z "$verbose" ] && exists chafa; then
-        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
-            chafa -s "${2}x${3}" -f symbols --animate false --polite on "$1"
-            exit 0
-        fi
-        w=$2 && [ $w -gt 70 ] && w=70
-        chafa -s "${w}x${3}" -f sixels --animate false --polite on --dither ordered --dither-intensity 0.85 "$1"
-    else
+    if [ -n "$verbose" ] || ! exists chafa; then
         preview_mediainfo "$1"
+        return
     fi
+    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
+        w=$(($2-3))
+        opts="-f symbols --animate false --polite on"
+    else
+        w=$2 && [ $w -gt 70 ] && w=70
+        opts="-f sixels --animate false --polite on --dither ordered --dither-intensity 0.85"
+    fi
+    case "$f" in
+        *.six) convert "$1" jpg:- | chafa -s "${w}x${3}" $opts ;;
+            *) chafa -s "${w}x${3}" $opts "$1" ;;
+    esac
 }
 
 preview_mediainfo() {
-    case "$(readlink -f "$1")" in
+    case "$f" in
         *.webp) exists exiftool && { exiftool "$1"; return; }
     esac
     if exists mediainfo; then
@@ -51,7 +57,7 @@ preview_appimage() {
     mkfifo "$mountpoint"
     "$1" --appimage-mount > "$mountpoint" &
     read appdir < "$mountpoint"
-    files='' && [ -n "$appdir" ] && files=$(cd "$appdir" && find . -ls)
+    files='' && [ -n "$appdir" ] && files=$(cd "$appdir" && LC_TIME=en_US.UTF-8 find . -ls)
     kill $!
     rm -f "$mountpoint"
     [ -n "$files" ] && echo "$files" || return 1
@@ -68,7 +74,7 @@ batorcat() {
     fi
 }
 
-case "$(readlink -f "$1")" in
+case "$f" in
     *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.tiff|*.webp)
         preview_image "$1" "$2" "$3" "$4" "$5" ;;
     *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
