@@ -1,17 +1,25 @@
-#!/bin/sh
+#!/usr/bin/env bash
 sudo apt update && {
     hold=$(sudo apt-mark showhold | awk '{ print $0"/" }')
-    upgs=$(sudo apt list --upgradable 2>/dev/null | awk -v hold="$hold" '
+    pkgs=$(sudo apt list --upgradable 2>/dev/null | awk -v hold="$hold" '
         !/Listing.../ {
-            split($0, name, "/");
-            if (index(hold, name[1]"/") > 0) printf "\033[33m(Hold) \033[0m";
-            printf "\033[32m%s\033[0m", name[1];
-            for (i = 2; i <= length(name); i++) printf "/%s", name[i];
+            split($0, pkg, "/");
+            if (index(hold, pkg[1]"/") > 0) printf "\033[33m(Hold) \033[0m";
+            printf "\033[32m%s\033[0m", pkg[1];
+            for (i = 2; i <= length(pkg); i++) printf "/%s", pkg[i];
             printf "\n";
         }
     ')
-    if [ -n "$upgs" ]; then
-        printf 'Listing...\n%s\n' "$upgs"
-        [ "${1:-}" != '-y' ] || sudo apt upgrade -y
+    if [ -n "$pkgs" ]; then
+        printf 'Upgradable packages:\n%s\n' "$pkgs"
+        count=$(echo "$pkgs" | awk '!/\(Hold\)/ { n++ } END { printf "%d", n }')
+        if [ $count -gt 0 ]; then
+            printf 'Proceed with upgrade? [Y/n] '
+            [ "${1:-}" = '-y' ] && { ans='y'; printf 'y'; } || read -r -n1 ans
+            [ -n "$ans" ] && printf '\n'
+            if [[ "$ans" == "" || "$ans" =~ [yY] ]]; then
+                sudo apt upgrade -y
+            fi
+        fi
     fi
 }
