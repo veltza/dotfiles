@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 sudo apt update && {
     hold=$(sudo apt-mark showhold | awk '{ print $0"/" }')
-    pkgs=$(sudo apt list --upgradable 2>/dev/null | awk -v hold="$hold" '
+    pkgs=$(sudo apt list --upgradable 2>/dev/null | awk -F / -v OFS=/ -v hold="$hold" '
         !/Listing.../ {
-            split($0, pkg, "/");
-            if (index(hold, pkg[1]"/") > 0) printf "\033[33m(Hold) \033[0m";
-            printf "\033[32m%s\033[0m", pkg[1];
-            for (i = 2; i <= length(pkg); i++) printf "/%s", pkg[i];
-            printf "\n";
+            pkg=$1; $1=""
+            if (index(hold, pkg"/") > 0) printf "\033[33m(Hold) \033[0m"
+            printf "\033[32m%s\033[0m%s\n", pkg, $0
         }
     ')
     if [ -n "$pkgs" ]; then
