@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+
 sudo apt update && {
     hold=$(sudo apt-mark showhold | awk '{ print $0"/" }')
-    pkgs=$(sudo apt list --upgradable 2>/dev/null | awk -F / -v OFS=/ -v hold="$hold" '
+    pkgs=$(sudo apt list --upgradable 2>/dev/null | awk -F / -v hold="$hold" '
         !/Listing.../ {
-            pkg=$1; $1=""
+            pkg = $1; OFS = FS; $1 = ""
             if (index(hold, pkg"/") > 0) printf "\033[33m(Hold) \033[0m"
             printf "\033[32m%s\033[0m%s\n", pkg, $0
         }

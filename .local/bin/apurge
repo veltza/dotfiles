@@ -1,4 +1,5 @@
 #!/bin/sh
+
 echo "Removing orphaned packages..."
 sudo apt update
 sudo apt autoclean
