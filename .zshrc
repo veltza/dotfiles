@@ -30,6 +30,8 @@ bindkey '^[[1;5D' emacs-backward-word   # Ctrl+Left
 bindkey '^[[3;5~' kill-word             # Ctrl+Delete
 bindkey '^U' backward-kill-line         # Ctrl+U
 bindkey '^[W' kill-region               # Alt+W
+bindkey '\C-]' vi-find-next-char        # Ctrl+]
+bindkey '\e\C-]' vi-find-prev-char      # Alt+Ctrl+]
 
 backward-kill-word-ctrl-bs() {
   local WORDCHARS=${WORDCHARS/\/}
@@ -44,7 +46,7 @@ zle -N edit-command-line
 bindkey '\C-x\C-e' edit-command-line
 
 # Data dir
-mkdir -p ${XDG_DATA_HOME:-$HOME/.local/share}/zsh
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/zsh"
 
 # History in cache directory 
 HISTSIZE=10000
@@ -63,7 +65,7 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zmodload zsh/complist
 command -v zoxide &> /dev/null && source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/zoxide-cmd-cd.zsh"
-compinit -d ${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zcompdump 
+compinit -d "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zcompdump"
 _comp_options+=(globdots)               # Include hidden files.
 
 # Use vim keys in tab complete menu
@@ -77,7 +79,7 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.zsh"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.zsh"
-command -v lfcd &> /dev/null && bindkey -s '^o' '^u^klfcd\n'
+command -v lf &> /dev/null && bindkey -s '^o' '^u^klf\n'
 
 # Plugins
 typeset -gA ZSH_HIGHLIGHT_STYLES

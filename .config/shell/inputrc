@@ -7,6 +7,8 @@ TAB: menu-complete
 "\C-h": backward-kill-word      # Ctrl+Backspace
 "\e[M": kill-word               # Ctrl+Delete
 "\e[3;5~": kill-word            # Ctrl+Delete
+"\ew": copy-region-as-kill      # Alt+w
+"\eW": kill-region              # Alt+W
 "\e[A": history-substring-search-backward
 "\e[B": history-substring-search-forward
 "\C-p": history-substring-search-backward

@@ -1,18 +1,15 @@
 # Alias for lf
 lf() {
+    export LF_CD_FILE=${XDG_RUNTIME_DIR:-$HOME}/lf-cd-$$
     command lf "$@"
-    update_terminal_title
-}
-
-# Change working dir in shell to last dir in lf on exit (adapted from ranger).
-lfcd() {
-    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lfcd-last-dir-path" "$@" && cdlf
+    [ -f "$LF_CD_FILE" ] && { command rm -f "$LF_CD_FILE"; cdlf; }
+    unset LF_CD_FILE
     update_terminal_title
 }
 
 # Change working dir in shell to last dir in lf
 cdlf() {
-    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/lfcd-last-dir-path" 2>/dev/null)
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" 2>/dev/null)
     [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
 }
 

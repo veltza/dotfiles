@@ -18,10 +18,10 @@ update_terminal_title() {
     printf "\033]0;$title\007" > /dev/tty
 }
 update_terminal_title
-export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+;}update_terminal_title"
+export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+";"}update_terminal_title"
 
 # Data dir
-mkdir -p ${XDG_DATA_HOME:-$HOME/.local/share}/bash
+mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/bash"
 
 # Don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
@@ -100,7 +100,7 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bash-dirhistory"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.bash"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.bash"
-command -v lfcd &> /dev/null && bind '"\C-o":"\C-u\C-klfcd\C-m"'
+command -v lf &> /dev/null && bind '"\C-o":"\C-u\C-klf\C-m"'
 command -v zoxide &> /dev/null && eval "$(zoxide init bash)"
 _fzf_setup_completion path lvim v
 _fzf_setup_completion dir tree
