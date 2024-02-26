@@ -74,18 +74,27 @@ cmd on-cd &{{
     branch="$(git name-rev --name-only --no-undefined --always HEAD 2>/dev/null)"
     [ -n "$branch" ] && { lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m$warning\""; return; }
     lf -remote "send $id set promptfmt \"$fmt$warning\""
+
+    # Add current directory to zoxide database or increment its rank
+    zoxide add "$PWD"
 }}
 
 cmd on-quit ${{
     set +e
+    echo "$PWD" > "${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path"
     awk '$1 == "fuse-archive" {
         a["040"]=" "; a["011"]="\t"; a["134"]="\\"; # a["012"]="\n"
         for (c in a) gsub("\\\\" c, a[c], $2)
         print $2
-        } ' /etc/mtab |
+        }' /etc/mtab |
     while read -r mntdir; do
         fusermount -u "$mntdir" && rmdir "$mntdir"
     done
+}}
+
+cmd quit-and-cd &{{
+    echo "$PWD" > "${LF_CD_FILE:-/dev/null}"
+    lf -remote "send $id quit"
 }}
 
 cmd open ${{
@@ -131,7 +140,7 @@ cmd open-with ${{
     [ "$1" != "sudo" ] && cmd=$1 || eval cmd=\${$#}
     case "$cmd" in
         hexedit) for f in $fx; do "$@" "$f"; done ;;
-        mediainfo) "$@" $fx | less ;;
+        hexyl|mediainfo) "$@" $fx | less ;;
         nano|nvim|vim) "$@" $fx ;;
         md5sum|sha256sum|sha512sum) lf -remote "send $id checksum $cmd" ;;
         sudoedit) lf -remote "send $id $cmd" ;;
@@ -156,6 +165,8 @@ cmd open-config ${{
 }}
 
 cmd open-new-terminal &{{
+    for e in $(env | grep "^lf_"); do eval "unset ${e%%=*}"; done
+    unset f fs fx id lf LF_LEVEL LF_CD_FILE
     setsid st -d "$PWD" &
 }}
 
@@ -827,7 +838,7 @@ cmd ci ${{
 cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
 cmd sudolf $sudo -E lf
 cmd sudorm $sudo rm -r -i -- $fx
-cmd q quit
+cmd q quit-and-cd
 
 # Remove some defaults
 map c
@@ -867,6 +878,8 @@ map <c-r> :on-cd; reload
 map R delete
 map T tag-toggle
 map U unselect
+map q quit-and-cd
+map Q quit
 
 # Applications
 map bc open-config

@@ -64,14 +64,17 @@ preview_appimage() {
 }
 
 batorcat() {
-    if exists bat; then
-        [ -n "$verbose" ] && w='auto' || w='never'
-        bat -pp -f --wrap=$w "$1"
-    elif exists highlight; then
-        highlight -O ansi "$1" 2>/dev/null || cat "$1"
-    else
-        cat "$1"
+    if [ -n "$verbose" ]; then
+        case "$(file --brief --mime-type -- "$f")" in
+            text/*)
+                ;;
+            *) [ $(tput cols) -ge 80 ] && p=2 || p=1
+                hexyl --panels $p -- "$f"
+                return ;;
+        esac
     fi
+    [ -n "$verbose" ] && w='auto' || w='never'
+    exists bat && { bat -pp -f --wrap=$w -- "$1"; true; } || cat -- "$1"
 }
 
 case "$f" in
