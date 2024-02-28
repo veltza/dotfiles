@@ -1,7 +1,7 @@
 # Alias for lf
 lf() {
     export LF_CD_FILE=${XDG_RUNTIME_DIR:-$HOME}/lf-cd-$$
-    command lf "$@"
+    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" "$@"
     [ -f "$LF_CD_FILE" ] && { command rm -f "$LF_CD_FILE"; cdlf; }
     unset LF_CD_FILE
     update_terminal_title

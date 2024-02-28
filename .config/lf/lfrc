@@ -81,7 +81,6 @@ cmd on-cd &{{
 
 cmd on-quit ${{
     set +e
-    echo "$PWD" > "${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path"
     awk '$1 == "fuse-archive" {
         a["040"]=" "; a["011"]="\t"; a["134"]="\\"; # a["012"]="\n"
         for (c in a) gsub("\\\\" c, a[c], $2)
