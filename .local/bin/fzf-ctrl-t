@@ -1,0 +1,22 @@
+#!/bin/dash
+# List files and directories for FZF_CTRL_T_COMMAND and FZF_ALT_C_COMMAND
+
+[ "${0##*/}" = "fzf-alt-c" ] && dirsonly=true
+
+fd_prune="-E .git"
+find_prune="-path '*/.git' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc'"
+
+if [ "$PWD" = "$HOME" ]; then
+    for path in .backups .cache .mozilla .thunderbird .windows; do
+        fd_prune="$fd_prune -E $path"
+        find_prune="$find_prune -o -path ./$path"
+    done
+fi
+
+if command -v fd >/dev/null; then
+    cmd="command fd ${dirsonly+"-td"} --follow -H $fd_prune"
+else
+    cmd="command find -L . \\( $find_prune \\) -prune -o ${dirsonly+"-type d"} -print 2> /dev/null | cut -b3-"
+fi
+
+eval "$cmd"
