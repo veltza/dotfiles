@@ -21,7 +21,7 @@ precmd() { vcs_info }
 zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:git*' formats " %{$fg[yellow]%}%  %b"
 setopt prompt_subst
-prompt='%B%{$fg[green]%}%n%{$fg[green]%}@%{$fg[green]%}%M%{$fg[white]%}:%{$fg[blue]%}%(4~|%-1~/…/%2~|%~)${vcs_info_msg_0_}%{$reset_color%}%#%b '
+prompt=$'%{\e]133;A\e\\%}''%B%{$fg[green]%}%n%{$fg[green]%}@%{$fg[green]%}%M%{$fg[white]%}:%{$fg[blue]%}%(4~|%-1~/…/%2~|%~)${vcs_info_msg_0_}%{$reset_color%}%#%b '
 
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -e
@@ -74,12 +74,15 @@ bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
 bindkey -M menuselect 'j' vi-down-line-or-history
 
-# Aliases, functions, fzf-keybindings
+# Aliases and functions
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.zsh"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.zsh"
 command -v lf &> /dev/null && bindkey -s '^o' '^u^klf\n'
+
+# Set up fzf key bindings and fuzzy completion
+command -v fzf &> /dev/null && eval "$(fzf --zsh)"
+command -v fzf-alt-c &> /dev/null && export FZF_ALT_C_COMMAND="fzf-alt-c"
+command -v fzf-ctrl-t &> /dev/null && export FZF_CTRL_T_COMMAND="fzf-ctrl-t"
 
 # Plugins
 typeset -gA ZSH_HIGHLIGHT_STYLES

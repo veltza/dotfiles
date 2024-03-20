@@ -77,9 +77,9 @@ parse_git_branch() {
 
 PROMPT_DIRTRIM=2
 if [ "$color_prompt" = yes ]; then
-    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
+    PS1='\[\033]133;A\033\\\]''\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
 else
-    PS1='\u@\h:\w$(parse_git_branch)\$ '
+    PS1='\[\033]133;A\033\\\]''\u@\h:\w$(parse_git_branch)\$ '
 fi
 unset color_prompt force_color_prompt
 
@@ -94,16 +94,28 @@ unset color_prompt force_color_prompt
 #  fi
 #fi
 
-# Aliases and functions
+# Aliases, functions and zoxide
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bash-dirhistory"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/completion.bash"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/fzf/key-bindings.bash"
 command -v lf &> /dev/null && bind '"\C-o":"\C-u\C-klf\C-m"'
 command -v zoxide &> /dev/null && eval "$(zoxide init bash)"
-_fzf_setup_completion path lvim v
-_fzf_setup_completion dir tree
+
+# Set up fzf key bindings and fuzzy completion
+if command -v fzf &> /dev/null; then
+    eval "$(fzf --bash)"
+    __fzf_cd__() {
+        local opts dir
+        opts="--height ${FZF_TMUX_HEIGHT:-40%} --bind=ctrl-z:ignore --reverse --walker=dir,follow,hidden --scheme=path ${FZF_DEFAULT_OPTS-} ${FZF_ALT_C_OPTS-} +m"
+        dir=$(
+          FZF_DEFAULT_COMMAND=${FZF_ALT_C_COMMAND:-} FZF_DEFAULT_OPTS="$opts" $(__fzfcmd)
+        ) && printf 'cd -- %q' "$dir"
+    }
+    _fzf_setup_completion path lvim v
+    _fzf_setup_completion dir tree
+    command -v fzf-alt-c &> /dev/null && export FZF_ALT_C_COMMAND="fzf-alt-c"
+    command -v fzf-ctrl-t &> /dev/null && export FZF_CTRL_T_COMMAND="fzf-ctrl-t"
+fi
 
 # Colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
