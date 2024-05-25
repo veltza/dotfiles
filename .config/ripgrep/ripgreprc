@@ -27,3 +27,6 @@
 
 # Sort by file path (disables parallelism)
 #--sort=path
+
+# alias for --color=always --heading --line-number
+--pretty
