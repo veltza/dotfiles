@@ -17,6 +17,7 @@
 # wget (optional)
 # wmctrl (optional)
 # xclip (optional)
+# zoxide (optional)
 #
 # Required tools - previewer:
 # bsdtar (libarchive)
@@ -48,6 +49,8 @@ set scrolloff 4
 set tagfmt "\033[33m%s\033[0m"
 set cursorpreviewfmt "\033[7;90;40m"
 set sixel
+set preserve "mode:timestamps"
+setlocal ~/Pictures/Wallpapers sortby name
 
 # Shell settings
 set shell dash
@@ -66,33 +69,40 @@ cmd on-cd &{{
 
     # Show git branch in prompt
     set +e
-    warning="" && [ $LF_LEVEL -ne 1 ] && warning="%S\033[41;1mWarning: You're in a nested lf instance!\033[0m"
     fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
+    warning="" && [ $LF_LEVEL -ne 1 ] && warning="%S\033[41;1mWarning: You're in a nested lf instance!\033[0m"
     branch="$(git symbolic-ref --short HEAD 2>/dev/null)" || \
     branch="tags/$(git describe --tags --exact-match HEAD 2>/dev/null)" || \
     #branch="$(git describe --contains HEAD 2>/dev/null)" || \
     branch="$(git name-rev --name-only --no-undefined --always HEAD 2>/dev/null)"
-    [ -n "$branch" ] && { lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m$warning\""; return; }
-    lf -remote "send $id set promptfmt \"$fmt$warning\""
+    if [ -n "$branch" ]; then
+        lf -remote "send $id set promptfmt \"$fmt \033[33;1m $branch\033[0m$warning\""
+    else
+        lf -remote "send $id set promptfmt \"$fmt$warning\""
+    fi
 
     # Add current directory to zoxide database or increment its rank
-    zoxide add "$PWD"
+    command -v zoxide >/dev/null && zoxide add "$PWD"
 }}
 
-cmd on-quit ${{
+cmd quitcmd &{{
     set +e
-    awk '$1 == "fuse-archive" {
-        a["040"]=" "; a["011"]="\t"; a["134"]="\\"; # a["012"]="\n"
-        for (c in a) gsub("\\\\" c, a[c], $2)
-        print $2
-        }' /etc/mtab |
-    while read -r mntdir; do
+    t=0.02
+    fa=$(awk '$1 == "fuse-archive" {
+            a["040"]=" "; a["011"]="\t"; a["134"]="\\"; # a["012"]="\n"
+            for (c in a) gsub("\\\\" c, a[c], $2)
+            print $2
+        }' /etc/mtab)
+    for mntdir in $fa; do
+        if [ "$(printf '%s' "$PWD" | grep -Fbo "$mntdir" | grep -Eo '^[0-9]+' | head -n 1)" = 0 ]; then
+            mntdir="$(printf '%s' "$mntdir" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+            lf -remote "send $id cd \"$mntdir/../\""
+            lf -remote "send $id quitcmd"
+            exit
+        fi
+        [ -n "$t" ] && { sleep $t; t=""; }
         fusermount -u "$mntdir" && rmdir "$mntdir"
     done
-}}
-
-cmd quit-and-cd &{{
-    echo "$PWD" > "${LF_CD_FILE:-/dev/null}"
     lf -remote "send $id quit"
 }}
 
@@ -107,7 +117,7 @@ cmd open ${{
     esac
     if [ -n "$chksum" ]; then
         printf '\nChecking %s checksum(s) ...\n' $chksum
-        set +e; $chksum -c "$f"
+        set +e; $chksum --ignore-missing -c "$f"
         set -e; printf 'Press enter to continue'; read -r ans
         exit 0
     fi
@@ -140,7 +150,7 @@ cmd open-with ${{
     case "$cmd" in
         hexedit) for f in $fx; do "$@" "$f"; done ;;
         hexyl|mediainfo) "$@" $fx | less ;;
-        nano|nvim|vim) "$@" $fx ;;
+        micro|nano|nvim|vim) "$@" $fx ;;
         md5sum|sha256sum|sha512sum) lf -remote "send $id checksum $cmd" ;;
         sudoedit) lf -remote "send $id $cmd" ;;
         sudo) exit 0 ;;
@@ -165,44 +175,8 @@ cmd open-config ${{
 
 cmd open-new-terminal &{{
     for e in $(env | grep "^lf_"); do eval "unset ${e%%=*}"; done
-    unset f fs fx id lf LF_LEVEL LF_CD_FILE
+    unset f fs fx id lf LF_LEVEL
     setsid st -d "$PWD" &
-}}
-
-# Check that we have permissions to every file and directory before
-# copying/moving files, and if we don't have permissions to all files,
-# don't copy/move any files.
-cmd paste-check &{{
-    if [ ! -e ~/.local/share/lf/files ] || [ "$(wc -l < ~/.local/share/lf/files)" -le 1 ]; then
-        lf -remote "send $id echoerr paste: no file in copy/cut buffer"
-        exit 0
-    fi
-    perm=''
-    mode=''
-    while read -r line; do
-        if [ -n "$mode" ] && [ ! -e "$(realpath -- "$line")" ]; then
-            continue
-        fi
-        case "$mode" in
-            copy)
-                if [ ! -r "$(realpath -- "$line")" ]; then
-                    perm='sudo'
-                    break
-                fi ;;
-            move)
-                if [ ! -w "$(dirname -- "$(realpath -- "$line")")" ]; then
-                    perm='sudo'
-                    break
-                fi ;;
-            *)
-                mode=$line ;;
-        esac
-    done < ~/.local/share/lf/files
-    if [ "$perm" = 'sudo' ] || [ ! -w "$PWD" ]; then
-        lf -remote "send $id echoerr paste: cannot $mode file(s): permission denied"
-        exit 0
-    fi
-    lf -remote "send $id paste"
 }}
 
 # y (select for copy) and P to paste soft-link
@@ -356,26 +330,11 @@ cmd trash_restore ${{
 }}
 
 cmd fzf_jump ${{
-    header="Jump to location"
-    if [ "$PWD" = "$HOME" ]; then
-        if command -v fd >/dev/null; then
-            res="$(fd --max-depth=4 --follow -H -E .backups -E .cache -E .git -E .mozilla -E .thunderbird -E .windows | fzf --reverse --header="$header")"
-        else
-            res="$(find -L . -maxdepth 4 \(  -path './.backups' -o -path './.cache' -o -path '*/.git' -o -name '.gitignore' -o -path './.mozilla' -o -path './.thunderbird' -o -path './.windows' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header="$header")"
-        fi
-    elif printf '%s' "$PWD" | grep -q $HOME; then
-        if command -v fd >/dev/null; then
-            res="$(fd --follow -H -E .git | fzf --reverse --header="$header")"
-        else
-            res="$(find -L . \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header="$header")"
-        fi
-    else
-        res="$(find . -maxdepth 2 \( -path '*/.git' -o -name '.gitignore' \) -prune -o -print 2> /dev/null | cut -b3- | fzf --reverse --header="$header")"
-    fi
-    [ -z "$res" ] && exit 0
-    [ -d "$res" ] && cmd="cd" || cmd="select"
-    res=$(printf '%s' "$res" | sed 's/\\/\\\\/g;s/"/\\"/g')
-    lf -remote "send $id $cmd \"$res\""
+    target="$(fzf-ctrl-t | fzf --reverse --header="Jump to location")"
+    [ -z "$target" ] && exit 0
+    [ -d "$target" ] && cmd="cd" || cmd="select"
+    target=$(printf '%s' "$target" | sed 's/\\/\\\\/g;s/"/\\"/g')
+    lf -remote "send $id $cmd \"$target\""
 }}
 
 cmd sudoedit ${{
@@ -660,7 +619,7 @@ cmd compress ${{
         esac
     done
 
-    tmp=$(mktemp -d) || exit 1
+    tmpdir=$(mktemp -d) || exit 1
 
     # check if archive already exists
     if [ -f "$aname.$ext" ]; then
@@ -668,23 +627,23 @@ cmd compress ${{
         read -r ans
         if [ "$ans" != "y" ] && [ "$ans" != "Y" ]; then
             lf -remote "send $id echo Aborted!"
-            rm -rf $tmp
+            rmdir $tmpdir
             exit 0
         fi
         if [ "$ext" = "zip" ]; then
-            unzip $aname.$ext -d $tmp >/dev/null || exit 1
+            unzip $aname.$ext -d $tmpdir >/dev/null || exit 1
         else
-            bsdtar -xf $aname.$ext -C $tmp >/dev/null || exit 1
+            bsdtar -xf $aname.$ext -C $tmpdir >/dev/null || exit 1
         fi
-        rm -rf $aname.$ext
+        rm -f -- $aname.$ext
     fi
 
     # compress
-    [ -n "$adir" ] && mkdir -p $tmp/$adir
+    [ -n "$adir" ] && mkdir -p $tmpdir/$adir
     parents='--parents' && [ "$mode" = "flat" ] && parents=''
-    printf '%s' "$files" | tr '\n' '\0' | xargs -0 cp $parents -a -t $tmp/$adir --
+    printf '%s' "$files" | tr '\n' '\0' | xargs -0 cp $parents -a -t $tmpdir/$adir --
     workdir=$PWD
-    cd $tmp
+    cd $tmpdir
     if [ "$ext" = "zip" ]; then
         q='' && [ -z "$verbose" ] && q='-q'
         find . -maxdepth 1 -printf "%P\n" | zip $q -r $workdir/$aname.$ext -@
@@ -692,7 +651,7 @@ cmd compress ${{
         find . -maxdepth 1 -printf "%P\n" | bsdtar -a${verbose}cf $workdir/$aname.$ext -T -
     fi
     cd $workdir
-    rm -rf $tmp
+    rm -rf $tmpdir
 
     # select archive
     aname=$(printf '%s' "$aname" | sed 's/\\/\\\\/g;s/"/\\"/g');
@@ -809,35 +768,43 @@ cmd cd-media &{{
     done
 }}
 
-cmd ca %{{
-    if [ $# -eq 0 ]; then
-        result=$HOME
-    elif [ $# -eq 1 ] && [ -d "$1" ]; then
-        result=$1
+cmd z %{{
+    if command -v zoxide >/dev/null; then
+        if [ $# -eq 0 ]; then
+            target=$HOME
+        elif [ $# -eq 1 ] && [ -d "$1" ]; then
+            target=$1
+        else
+            target="$(zoxide query --exclude $PWD -- $@)"
+        fi
+        lf -remote "send $id cd \"$target\""
     else
-        result="$(zoxide query --exclude $PWD -- $@)"
+        lf -remote "send $id cd \"${1:-$HOME}\""
     fi
-    lf -remote "send $id cd $result"
 }}
 
-cmd ci ${{
+cmd zi ${{
     set +e
+    if ! command -v zoxide >/dev/null; then
+        lf -remote "send echoerr zoxide is not installed!"
+        exit
+    fi
     if [ $# -eq 1 ] && [ -d "$1" ]; then
-        result=$1
+        target=$1
     else
-        result="$(zoxide query -i --exclude $PWD -- $@)"
+        target="$(zoxide query -i --exclude $PWD -- $@)"
         if [ $? -eq 1 ]; then
             lf -remote "send echo zoxide: no match found"
             exit
         fi
     fi
-    [ -z "$result" ] || lf -remote "send $id cd $result"
+    [ -z "$target" ] || lf -remote "send $id cd \"$target\""
 }}
 
 cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
 cmd sudolf $sudo -E lf
 cmd sudorm $sudo rm -r -i -- $fx
-cmd q quit-and-cd
+cmd q quitcmd
 
 # Remove some defaults
 map c
@@ -852,8 +819,6 @@ map * mark-remove
 map C clear
 map cc clear
 map cd push :cd<space>
-map ca push :ca<space>
-map ci push :ci<space>
 map cm push :chmod<space>
 map co push :chown<space>
 map csm push :sudochmod<space>
@@ -871,19 +836,19 @@ map <c-o> open-new-terminal
 map o push :open-with<space>
 map O push :open-with<space>pkexec<space>
 map P link
-map p paste-check
-map <a-p> paste
+map q quitcmd
 map <c-r> :on-cd; reload
 map R delete
 map T tag-toggle
 map U unselect
-map q quit-and-cd
-map Q quit
+map V invert-below
+map zi push :zi<space>
 
 # Applications
 map bc open-config
 map br bulkrename
-map e $set -f; case "$EDITOR" in ?vim) $EDITOR -p $fx;; *) $EDITOR $fx;; esac
+# map e $set -f; case "$EDITOR" in ?vim) $EDITOR -p $fx;; *) $EDITOR $fx;; esac
+map e $set -f; $EDITOR $fx
 map E sudoedit
 map <a-e> suedit
 map I open-with nsxiv
@@ -939,11 +904,14 @@ map g.d cd ~/.dwm
 map g.l cd ~/.local
 map gtr cd ~/.local/share/Trash/files
 
-# Wait till lf server is up and running and update the prompt
+# Wait till lf server is up and running
 ${{
     icons="icons" && [ -z "${DISPLAY:-}" ] && icons="noicons" # no icons on tty/ssh
     for i in 1 2 3 4 5 6 7 8 9 10; do
         [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
     done
+    command -v zoxide >/dev/null && lf -remote "send $id map cd push :z<space>" || true
 }}
+
+# Update the prompt (git branch etc.)
 :on-cd

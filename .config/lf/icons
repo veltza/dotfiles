@@ -10,11 +10,11 @@
 ~/Documents     󱔘
 ~/Downloads     
 ~/Music         
-~/Pictures      
+~/Pictures      
 ~/Public        
 ~/repos         
 ~/Templates     
-~/Videos        
+~/Videos        
 
 # file types (with matching order)
 ln             # LINK
@@ -310,32 +310,32 @@ Vagrantfile             
 *.xwd   
 
 # video formats (extensions from dircolors defaults)
-*.asf   
-*.avi   
-*.flc   
-*.fli   
-*.flv   
-*.gl    
-*.m2v   
-*.m4v   
-*.mjpeg 
-*.mjpg  
-*.mkv   
-*.mov   
-*.mp4   
-*.mp4v  
-*.mpeg  
-*.mpg   
-*.nuv   
-*.ogv   
-*.ogx   
-*.qt    
-*.rm    
-*.rmvb  
-*.vob   
-*.webm  
-*.wmv   
-*.yuv   
+*.asf   󰨜
+*.avi   󰨜
+*.flc   󰨜
+*.fli   󰨜
+*.flv   󰨜
+*.gl    󰨜
+*.m2v   󰨜
+*.m4v   󰨜
+*.mjpeg 󰨜
+*.mjpg  󰨜
+*.mkv   󰨜
+*.mov   󰨜
+*.mp4   󰨜
+*.mp4v  󰨜
+*.mpeg  󰨜
+*.mpg   󰨜
+*.nuv   󰨜
+*.ogv   󰨜
+*.ogx   󰨜
+*.qt    󰨜
+*.rm    󰨜
+*.rmvb  󰨜
+*.vob   󰨜
+*.webm  󰨜
+*.wmv   󰨜
+*.yuv   󰨜
 
 # audio formats (extensions from dircolors defaults)
 *.aac   
