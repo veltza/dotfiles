@@ -23,8 +23,8 @@ export INPUTRC="$XDG_CONFIG_HOME/shell/inputrc"
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/ripgreprc"
 
 # Default apps
-export EDITOR=lvim
-export SUDO_EDITOR=lvim
+export EDITOR=nvim
+export SUDO_EDITOR=nvim
 export BROWSER=chromium
 
 # Less Colors for Man Pages
@@ -40,7 +40,7 @@ export MANROFFOPT="-c"
 
 # Less settings
 export LESSUTFCHARDEF=E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p
-export LESSHISTFILE=-
+export LESSHISTFILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/.lesshst"
 export LESS="-R"
 
 # Increase the font size from 10 pt to 10.5 pt in QT apps.
@@ -48,4 +48,4 @@ export QT_FONT_DPI=98
 export QT_QPA_PLATFORMTHEME=qt5ct
 
 # ls colors
-[ -f "$XDG_CONFIG_HOME/shell/dircolors" ] && . "$XDG_CONFIG_HOME/shell/dircolors"
+[ -f "$XDG_CONFIG_HOME/shell/ls_colors" ] && . "$XDG_CONFIG_HOME/shell/ls_colors"

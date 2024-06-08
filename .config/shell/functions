@@ -1,16 +1,13 @@
 # Alias for lf
 lf() {
-    export LF_CD_FILE=${XDG_RUNTIME_DIR:-$HOME}/lf-cd-$$
-    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" "$@"
-    [ -f "$LF_CD_FILE" ] && { command rm -f "$LF_CD_FILE"; cdlf; }
-    unset LF_CD_FILE
+    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" "$@" && cdlf
     update_terminal_title
 }
 
 # Change working dir in shell to last dir in lf
 cdlf() {
     local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" 2>/dev/null)
-    [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
+    [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
 }
 
 # tmux wrapper

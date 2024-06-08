@@ -1,10 +1,10 @@
-if command -v bat >/dev/null; then
+if command -v bat &>/dev/null; then
     alias bat='bat -p'
     alias -g -- --help='--help | bat --language=help --style=plain' 2>/dev/null
 fi
 alias bc='bc -l ${XDG_CONFIG_HOME:-$HOME/.config}/bc/bcrc'
 alias bm='bashmount'
-command -v ncal >/dev/null && alias cal='ncal -Mwb' || alias cal='cal -mw'
+command -v ncal &>/dev/null && alias cal='ncal -Mwb' || alias cal='cal -mw'
 alias cd-='cd -'
 alias cd..='cd ../'
 alias ..='cd ../'
@@ -23,7 +23,6 @@ alias 8='cd -8'
 alias 9='cd -9'
 alias cp='cp -i'
 alias df='df -h'
-alias dh='dirs -v'
 alias d='dirs -v'
 alias dotfiles="git --git-dir=$HOME/.dotfiles --work-tree=$HOME"
 alias egrep='egrep --color=auto'
@@ -58,5 +57,4 @@ alias tmux='tmux -u -f ${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf'
 alias trl='trash-list'
 alias trm='trash-put'
 alias trr='trash-restore'
-alias v='lvim'
-alias ytfzf='ytfzf -t'
+alias v='nvim'
