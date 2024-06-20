@@ -59,11 +59,16 @@ autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '\C-x\C-e' edit-command-line
 
+# Make sure the following completion dirs are in fpath
+fpath[(i)/usr/local/share/zsh/site-functions]=()
+fpath[(i)/usr/share/zsh/site-functions]=()
+fpath=("/usr/local/share/zsh/site-functions" "/usr/share/zsh/site-functions" $fpath)
+
 # Use modern completion system and initialize zoxide
 autoload -Uz compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' matcher-list '' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zmodload zsh/complist
 command -v zoxide &> /dev/null && source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/zoxide-init-cd.zsh"
 compinit -d "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zcompdump"

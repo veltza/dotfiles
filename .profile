@@ -49,3 +49,6 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 
 # ls colors
 [ -f "$XDG_CONFIG_HOME/shell/ls_colors" ] && . "$XDG_CONFIG_HOME/shell/ls_colors"
+
+# Set locale
+[ -f "$XDG_CONFIG_HOME/locale.conf" ] && . "$XDG_CONFIG_HOME/locale.conf"
