@@ -17,12 +17,12 @@ update_terminal_title
 export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+";"}update_terminal_title"
 
 # Data dir
-mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/bash"
+mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/bash"
 
 # History size and location
 HISTSIZE=10000
 HISTFILESIZE=10000
-HISTFILE=${XDG_DATA_HOME:-$HOME/.local/share}/bash/bash_history
+HISTFILE=${XDG_STATE_HOME:-$HOME/.local/state}/bash/bash_history
 
 # Don't put duplicate lines or lines starting with space in the history
 HISTCONTROL=ignoreboth

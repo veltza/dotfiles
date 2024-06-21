@@ -15,12 +15,12 @@ autoload add-zsh-hook
 add-zsh-hook chpwd update_terminal_title
 
 # Data dir
-mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/zsh"
+mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
 
 # History size, location and settings
 HISTSIZE=10000
 SAVEHIST=10000
-HISTFILE=${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zsh_history
+HISTFILE=${XDG_STATE_HOME:-$HOME/.local/state}/zsh/zsh_history
 setopt histignorealldups sharehistory histignorespace
 
 # Directory history
@@ -71,7 +71,7 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' matcher-list '' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zmodload zsh/complist
 command -v zoxide &> /dev/null && source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/zoxide-init-cd.zsh"
-compinit -d "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zcompdump"
+compinit -d "${XDG_STATE_HOME:-$HOME/.local/state}/zsh/zcompdump"
 _comp_options+=(globdots) # Include hidden files
 
 # Use vim keys in tab complete menu
