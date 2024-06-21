@@ -21,6 +21,7 @@ export XDG_STATE_HOME="$HOME/.local/state"
 export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
 export INPUTRC="$XDG_CONFIG_HOME/shell/inputrc"
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/ripgreprc"
+export PYTHONSTARTUP="$XDG_CONFIG_HOME/python/pythonstartup.py"
 
 # Default apps
 export EDITOR=nvim
