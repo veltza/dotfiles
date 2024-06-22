@@ -2,4 +2,4 @@
 # ~/.zprofile
 #
 
-[ -f "$HOME/.profile" ] && . "$HOME/.profile"
+[ ! -f "$HOME/.profile" ] || . "$HOME/.profile"
