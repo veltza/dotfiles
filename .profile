@@ -18,10 +18,15 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
+export CARGO_HOME="$XDG_DATA_HOME/cargo"
+export GOPATH="$XDG_DATA_HOME/go"
 export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
 export INPUTRC="$XDG_CONFIG_HOME/shell/inputrc"
-export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/ripgreprc"
+export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
 export PYTHONSTARTUP="$XDG_CONFIG_HOME/python/pythonstartup.py"
+export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/ripgreprc"
+export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
+export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 
 # Default apps
 export EDITOR=nvim
@@ -49,7 +54,7 @@ export QT_FONT_DPI=98
 export QT_QPA_PLATFORMTHEME=qt5ct
 
 # ls colors
-[ -f "$XDG_CONFIG_HOME/shell/ls_colors" ] && . "$XDG_CONFIG_HOME/shell/ls_colors"
+[ ! -f "$XDG_CONFIG_HOME/shell/ls_colors" ] || . "$XDG_CONFIG_HOME/shell/ls_colors"
 
 # Set locale
-[ -f "$XDG_CONFIG_HOME/locale.conf" ] && . "$XDG_CONFIG_HOME/locale.conf"
+[ ! -f "$XDG_CONFIG_HOME/locale.conf" ] || . "$XDG_CONFIG_HOME/locale.conf"
