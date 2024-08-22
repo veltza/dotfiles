@@ -1,42 +1,25 @@
-# Required tools - lf:
-# bsdtar (libarchive)
-# coreutils
-# dash
-# gunzip (gzip)
-# trash-cli
-# unrar
-# unxz (xz)
-# unzip
-# unzstd (zstd)
-# vidir (moreutils)
-# curl (optional)
-# dragon-drop (optional) - https://github.com/mwh/dragon
-# fuse-archive (optional) - https://github.com/google/fuse-archive
-# fzf (optional)
-# hexedit (optional)
-# wget (optional)
-# wmctrl (optional)
-# xclip (optional)
-# zoxide (optional)
+###############################################################################
+# Required tools for lf:
+# bsdtar (libarchive), coreutils, dash, gunzip (gzip), trash-cli, unrar,
+# unxz (xz), unzip, unzstd (zstd), vidir (moreutils)
 #
-# Required tools - previewer:
-# bsdtar (libarchive)
-# catdoc
-# convert (imagemagick)
-# docx2txt
-# glow - https://github.com/charmbracelet/glow
-# gunzip (gzip)
-# mediainfo or exiftool
-# odt2txt
-# pdftotext
-# tree
-# unxz (xz)
-# unzstd (zstd)
-# bat (optional)
-# chafa (optional)
-# highlight (optional)
-# transmission-show (optional)
-# ueberzug (optional)
+# Optional tools for lf:
+# curl, dragon-drop (https://github.com/mwh/dragon),
+# fuse-archive (https://github.com/google/fuse-archive), fzf, hexedit, wget,
+# wmctrl, xclip, zoxide
+#
+# Required tools for previewer:
+# bsdtar (libarchive), catdoc, docx2txt,
+# glow (https://github.com/charmbracelet/glow), gunzip (gzip), mediainfo or
+# exiftool, odt2txt, pdftotext, tree, unxz (xz), unzstd (zstd)
+#
+# Optional tools for previewer:
+# bat, chafa, imagemagick, transmission-show
+###############################################################################
+
+############
+# Settings #
+############
 
 # Basic settings
 set noautoquit
@@ -45,19 +28,35 @@ set icons
 set ignorecase
 set preview
 set previewer ~/.config/lf/preview
+set sixel
 set scrolloff 4
 set tagfmt "\033[33m%s\033[0m"
 set cursorpreviewfmt "\033[7;90;40m"
-set sixel
 set preserve "mode:timestamps"
-setlocal ~/Pictures/Wallpapers sortby name
+
+# Directory settings
+set nohidden
+setlocal /etc/ hidden
+setlocal /srv/ hidden
+setlocal /tmp/ hidden
+setlocal /usr/ hidden
+setlocal /var/ hidden
+setlocal /media/ hidden
+setlocal /run/media/ hidden
+setlocal /run/user/ hidden
+setlocal ~/.local/share/Trash/ hidden
+setlocal ~/tmp/ hidden
+setlocal ~/Pictures/Wallpapers/ sortby name
 
 # Shell settings
 set shell dash
 set shellopts '-eu'
 set ifs "\n"
 
-# Custom Functions
+####################
+# Custom functions #
+####################
+
 cmd on-cd &{{
     # Show current directory in window title
     case "$PWD" in
@@ -65,7 +64,11 @@ cmd on-cd &{{
         $HOME*) title="~${PWD#$HOME}" ;;
         *) title=$PWD ;;
     esac
-    printf "\033]0;$title - lf\007" > /dev/tty
+    printf "\033]0;%s - lf\007" "$title" > /dev/tty
+
+    # Report the current working directory to terminal
+    cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
+    printf "\033]7;file://%s%s\007" "$(hostname)" "$cwd" > /dev/tty
 
     # Show git branch in prompt
     set +e
@@ -469,12 +472,12 @@ cmd unarchive ${{
     fi
     oldfiles=$(ls --group-directories-first -A)
     case "$f" in
-        *.7z|*.deb|*.iso|*.jar|*.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst)
+        *.7z|*.deb|*.iso|*.jar|*.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
             bsdtar -xvf "$f" -C "$targetdir" ;;
         *.rar)
             unrar x $f $targetdir ;;
-        *.zip)
-            unzip $f -d $targetdir ;;
+        # *.zip)
+        #     unzip $f -d $targetdir ;;
         *.zst)
             unzstd $f --output-dir-flat $targetdir ;;
         *.gz|*.xz)
@@ -528,7 +531,6 @@ cmd unarchive ${{
     lf -remote "send $id echo Done"
 }}
 
-# Compress files
 cmd compress ${{
     set -f
     verbose='v' # v or empty
@@ -806,6 +808,10 @@ cmd sudolf $sudo -E lf
 cmd sudorm $sudo rm -r -i -- $fx
 cmd q quitcmd
 
+################
+# Key mappings #
+################
+
 # Remove some defaults
 map c
 map m
@@ -813,7 +819,7 @@ map t
 map J
 map K
 
-# Basic Functions
+# Basic functions
 map . set hidden!
 map * mark-remove
 map C clear
@@ -900,14 +906,19 @@ map gv cd ~/Videos
 map gM cd-media
 map g.b cd ~/.backups
 map g.c cd ~/.config
-map g.d cd ~/.dwm
+map g.d cd ~/repos/dwm
 map g.l cd ~/.local
 map gtr cd ~/.local/share/Trash/files
 
-# Wait till lf server is up and running
+#####################
+# Startup procedure #
+#####################
+
+# Wait until the lf server is up and running. And then set the keybinding to
+# zoxide (if present) and hide the icons when using TTY or SSH.
 ${{
     icons="icons" && [ -z "${DISPLAY:-}" ] && icons="noicons" # no icons on tty/ssh
-    for i in 1 2 3 4 5 6 7 8 9 10; do
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
         [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
     done
     command -v zoxide >/dev/null && lf -remote "send $id map cd push :z<space>" || true

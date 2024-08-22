@@ -4,17 +4,19 @@
 # See https://www.nerdfonts.com for more information.
 
 # user directories
-~               󰋜
-~/Applications  
-~/Desktop       󰇄
-~/Documents     󱔘
-~/Downloads     
-~/Music         
-~/Pictures      
-~/Public        
-~/repos         
-~/Templates     
-~/Videos        
+~/                  󰋜
+~/Applications      
+~/Desktop           󰇄
+~/Documents         󱔘
+~/Downloads         
+~/Live-usb-storage  󱊟
+~/Music             
+~/Pictures          
+~/Public            
+~/repos             
+~/Templates         
+~/tmp               
+~/Videos            
 
 # file types (with matching order)
 ln             # LINK

@@ -25,8 +25,10 @@ preview_image() {
         opts="-f sixels --animate false --polite on --dither ordered --dither-intensity 0.85"
     fi
     case "$f" in
-        *.six) convert "$1" jpg:- | chafa -s "${w}x${3}" $opts ;;
-            *) chafa -s "${w}x${3}" $opts "$1" ;;
+        *.bmp|*.six)
+            magick "$1" jpg:- | chafa -s "${w}x${3}" $opts ;;
+        *)
+            chafa -s "${w}x${3}" $opts "$1" ;;
     esac
 }
 
@@ -69,7 +71,7 @@ batorcat() {
 }
 
 case "$f" in
-    *.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.tiff|*.webp)
+    *.avif|*.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.tiff|*.webp)
         preview_image "$1" "$2" "$3" "$4" "$5" ;;
     *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
         preview_mediainfo "$1" ;;
