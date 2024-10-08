@@ -17,7 +17,7 @@ preview_image() {
         preview_mediainfo "$1"
         return
     fi
-    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
+    if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
         w=$(($2-3))
         opts="-f symbols --animate false --polite on"
     else

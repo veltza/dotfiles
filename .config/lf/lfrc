@@ -11,7 +11,8 @@
 # Required tools for previewer:
 # bsdtar (libarchive), catdoc, docx2txt,
 # glow (https://github.com/charmbracelet/glow), gunzip (gzip), mediainfo or
-# exiftool, odt2txt, pdftotext, tree, unxz (xz), unzstd (zstd)
+# exiftool (perl-image-exiftool), odt2txt, pdftotext (poppler), tree,
+# unxz (xz), unzstd (zstd)
 #
 # Optional tools for previewer:
 # bat, chafa, imagemagick, transmission-show
@@ -917,7 +918,7 @@ map gtr cd ~/.local/share/Trash/files
 # Wait until the lf server is up and running. And then set the keybinding to
 # zoxide (if present) and hide the icons when using TTY or SSH.
 ${{
-    icons="icons" && [ -z "${DISPLAY:-}" ] && icons="noicons" # no icons on tty/ssh
+    icons="icons" && [ -z "${DISPLAY:-}" ] && [ -z "${SSH_CONNECTION:-}" ] && icons="noicons" # no icons on tty
     for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
         [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
     done
