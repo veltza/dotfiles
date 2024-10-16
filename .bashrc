@@ -4,17 +4,19 @@ case $- in
       *) return;;
 esac
 
-# Set the terminal title to reflect the current working directory
-update_terminal_title() {
+# Report the current working directory to terminal
+update_terminal_cwd() {
     local title=$PWD
     case "$PWD" in
         $HOME) title=$USER ;;
         $HOME*) title="~${PWD#$HOME}" ;;
     esac
-    printf "\033]0;$title\007" > /dev/tty
+    local cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
+    printf "\033]0;%s\007" "$title"
+    printf "\033]7;file://%s%s\007" "$HOSTNAME" "$cwd"
 }
-update_terminal_title
-export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+";"}update_terminal_title"
+update_terminal_cwd
+export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+";"}update_terminal_cwd"
 
 # Data dir
 mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/bash"
@@ -64,11 +66,12 @@ command -v lf &> /dev/null && bind '"\C-o":"\C-u\C-klf\C-m"'
 if command -v fzf &> /dev/null; then
     eval "$(fzf --bash)"
     __fzf_cd__() {
-        local opts dir
-        opts="--height ${FZF_TMUX_HEIGHT:-40%} --bind=ctrl-z:ignore --reverse --walker=dir,follow,hidden --scheme=path ${FZF_DEFAULT_OPTS-} ${FZF_ALT_C_OPTS-} +m"
+        local dir
         dir=$(
-          FZF_DEFAULT_COMMAND=${FZF_ALT_C_COMMAND:-} FZF_DEFAULT_OPTS="$opts" $(__fzfcmd)
-        ) && printf 'cd -- %q' "$dir"
+            FZF_DEFAULT_COMMAND=${FZF_ALT_C_COMMAND:-} \
+            FZF_DEFAULT_OPTS=$(__fzf_defaults "--reverse --walker=dir,follow,hidden --scheme=path" "${FZF_ALT_C_OPTS-} +m") \
+            FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd)
+        ) && printf 'cd -- %q' "$(builtin unset CDPATH && builtin cd -- "$dir" && builtin pwd)"
     }
     _fzf_setup_completion path lvim v
     _fzf_setup_completion dir tree

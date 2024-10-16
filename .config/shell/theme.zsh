@@ -54,7 +54,7 @@ prompt_main() {
 
 prompt_precmd() {
     vcs_info
-    PROMPT=$'%{\e]133;A\e\\%}''%{%f%b%k%}$(prompt_main)%{%f%b%k%} '
+    PROMPT=$'%{\e]133;A\a%}''%{%f%b%k%}$(prompt_main)%{%f%b%k%} '
 }
 
 prompt_setup() {

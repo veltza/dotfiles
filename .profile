@@ -53,6 +53,9 @@ export LESS="-R"
 export QT_FONT_DPI=98
 export QT_QPA_PLATFORMTHEME=qt5ct
 
+# Make sure we have true colors when we ssh into this machine
+[ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ] && export COLORTERM=truecolor
+
 # ls colors
 [ ! -f "$XDG_CONFIG_HOME/shell/ls_colors" ] || . "$XDG_CONFIG_HOME/shell/ls_colors"
 

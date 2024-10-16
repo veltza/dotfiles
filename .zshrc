@@ -1,18 +1,20 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-# Set the terminal title to reflect the current working directory
-update_terminal_title() {
+# Report the current working directory to terminal
+update_terminal_cwd() {
     local title=$PWD
     case "$PWD" in
         $HOME) title=$USER ;;
         $HOME*) title="~${PWD#$HOME}" ;;
     esac
-    printf "\033]0;$title\007" > /dev/tty
+    local cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
+    printf "\033]0;%s\007" "$title"
+    printf "\033]7;file://%s%s\007" "$HOST" "$cwd"
 }
-update_terminal_title
+update_terminal_cwd
 autoload add-zsh-hook
-add-zsh-hook chpwd update_terminal_title
+add-zsh-hook chpwd update_terminal_cwd
 
 # Data dir
 mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
@@ -26,6 +28,9 @@ setopt histignorealldups sharehistory histignorespace
 # Directory history
 DIRSTACKSIZE=10
 setopt autopushd pushdsilent pushdignoredups pushdminus
+
+# Don't remove a space before the pipe symbol
+ZLE_REMOVE_SUFFIX_CHARS=$' \t\n;&)'
 
 # Set up the prompt
 if [[ $(tty) =~ tty[0-9]$ ]]; then
@@ -64,15 +69,17 @@ fpath[(i)/usr/local/share/zsh/site-functions]=()
 fpath[(i)/usr/share/zsh/site-functions]=()
 fpath=("/usr/local/share/zsh/site-functions" "/usr/share/zsh/site-functions" $fpath)
 
-# Use modern completion system and initialize zoxide
+# Use modern completion system
 autoload -Uz compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' matcher-list '' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zmodload zsh/complist
-command -v zoxide &> /dev/null && source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/zoxide-init-cd.zsh"
 compinit -d "${XDG_STATE_HOME:-$HOME/.local/state}/zsh/zcompdump"
 _comp_options+=(globdots) # Include hidden files
+
+# Initialize zoxide
+command -v zoxide &> /dev/null && source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/zoxide-init-cd.zsh"
 
 # Use vim keys in tab complete menu
 bindkey -M menuselect 'h' vi-backward-char

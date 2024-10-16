@@ -1,12 +1,24 @@
 # Alias for lf
 lf() {
     command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" "$@" && cdlf
-    update_terminal_title
+    update_terminal_cwd
 }
 
 # Change working dir in shell to last dir in lf
 cdlf() {
     local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" 2>/dev/null)
+    [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
+}
+
+# Alias for yazi
+y() {
+    command yazi "$@" --cwd-file="${XDG_RUNTIME_DIR:-$HOME}/yazi-cwd-file" && cdy
+    update_terminal_cwd
+}
+
+# Change working dir in shell to last dir in yazi
+cdy() {
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/yazi-cwd-file" 2>/dev/null)
     [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
 }
 
@@ -19,7 +31,7 @@ tm() {
     else
         tmux new-session
     fi
-    update_terminal_title
+    update_terminal_cwd
 }
 
 # Run the system update in a tmux session
@@ -31,7 +43,7 @@ update() {
     else
         tmux new-session -s 'Update' \; send-keys "system-update" C-m
     fi
-    update_terminal_title
+    update_terminal_cwd
 }
 
 system-update() {

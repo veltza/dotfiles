@@ -57,7 +57,7 @@ prompt_main() {
 }
 
 prompt_precmd() {
-    PS1='\[\033]133;A\033\\\]'$(prompt_main)'\[\033[0m\] '
+    PS1='\[\033]133;A\007\]'$(prompt_main)'\[\033[0m\] '
 }
 
 export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+";"}prompt_precmd"
