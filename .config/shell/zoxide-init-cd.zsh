@@ -1,6 +1,6 @@
+# shellcheck shell=bash
 # This is a modified version of 'eval "$(zoxide init zsh --cmd cd)"' that also
-# supports the options of the cd command. For example, 'cd -P' resolves symbolic
-# links.
+# supports the cd command options. For example, 'cd -P' resolves symlinks.
 
 # =============================================================================
 #
@@ -42,8 +42,6 @@ fi
 # When using zoxide with --no-cmd, alias these internal functions as desired.
 #
 
-__zoxide_z_prefix='z#'
-
 # Jump to a directory using only keywords.
 function __zoxide_z() {
     # shellcheck disable=SC2199
@@ -57,23 +55,19 @@ function __zoxide_z() {
         __zoxide_cd ~
     elif [[ "$#" -eq 1 ]] && { [[ -d "$1" ]] || [[ "$1" = '-' ]] || [[ "$1" =~ ^[-+][0-9]$ ]]; }; then
         __zoxide_cd "$1"
-    elif [[ "$@[-1]" == "${__zoxide_z_prefix}"* ]]; then
-        # shellcheck disable=SC2124
-        \builtin local result="${@[-1]}"
-        __zoxide_cd "${result:${#__zoxide_z_prefix}}"
+    elif [[ "$#" -eq 2 ]] && [[ "$1" = "--" ]]; then
+        __zoxide_cd "$2"
     else
         \builtin local result
         # shellcheck disable=SC2312
-        result="$(\command zoxide query --exclude "$(__zoxide_pwd)" -- "$@")" &&
-            __zoxide_cd "${result}"
+        result="$(\command zoxide query --exclude "$(__zoxide_pwd)" -- "$@")" && __zoxide_cd "${result}"
     fi
 }
 
 # Jump to a directory using interactive search.
 function __zoxide_zi() {
     \builtin local result
-    __zoxide_cd_opts=
-    result="$(\command zoxide query -i -- "$@")" && __zoxide_cd "${result}"
+    result="$(\command zoxide query --interactive -- "$@")" && __zoxide_cd "${result}"
 }
 
 # =============================================================================
@@ -81,43 +75,68 @@ function __zoxide_zi() {
 # Commands for zoxide. Disable these using --no-cmd.
 #
 
-\builtin unalias cd &>/dev/null || \builtin true
 function cd() {
     __zoxide_z "$@"
 }
 
-\builtin unalias cdi &>/dev/null || \builtin true
 function cdi() {
     __zoxide_zi "$@"
 }
 
+# Completions.
 if [[ -o zle ]]; then
+    __zoxide_result=''
+
     function __zoxide_z_complete() {
         # Only show completions when the cursor is at the end of the line.
         # shellcheck disable=SC2154
         [[ "${#words[@]}" -eq "${CURRENT}" ]] || return 0
 
-        if [[ "${#words[@]}" -eq 2 ]]; then
-            _files -/
+        # cd options
+        __zoxide_cd_opts='' n=2
+        while [[ "${words[$n]}" =~ ^-(q|s|L|P)+$ ]]; do
+            __zoxide_cd_opts="$__zoxide_cd_opts ${words[$n]}"
+            n=$((n+1))
+        done
+        [ "${words[$n]}" = "--" ] && n=$((n+1))
+
+        if [[ "${#words[@]}" -eq $n ]]; then
+            # Show completions for local directories.
+            _cd -/
+
         elif [[ "${words[-1]}" == '' ]]; then
-            \builtin local result
-            # shellcheck disable=SC2086,SC2312
-            if result="$(\command zoxide query --exclude "$(__zoxide_pwd)" -i -- ${words[2,-1]})"; then
-                result="${__zoxide_z_prefix}${result}"
-                # shellcheck disable=SC2296
-                compadd -Q "${(q-)result}"
-            fi
+            # Show completions for Space-Tab.
+            # shellcheck disable=SC2086
+            __zoxide_result="$(\command zoxide query --exclude "$(__zoxide_pwd || \builtin true)" --interactive -- ${words[$n,-1]})" || __zoxide_result=''
+
+            # Set a result to ensure completion doesn't re-run
+            compadd -Q ""
+
+            # Bind '\e[0n' to helper function.
+            \builtin bindkey '\e[0n' '__zoxide_z_complete_helper'
+            # Sends query device status code, which results in a '\e[0n' being sent to console input.
             \builtin printf '\e[5n'
+
+            # Report that the completion was successful, so that we don't fall back
+            # to another completion function.
+            return 0
         fi
-        return 0
     }
 
-    \builtin bindkey '\e[0n' 'reset-prompt'
-    if [[ "${+functions[compdef]}" -ne 0 ]]; then
-        \compdef -d cd
-        \compdef -d cdi
-        \compdef __zoxide_z_complete cd
-    fi
+    function __zoxide_z_complete_helper() {
+        if [[ -n "${__zoxide_result}" ]]; then
+            # shellcheck disable=SC2034,SC2296
+            BUFFER="cd${=__zoxide_cd_opts} ${(q-)__zoxide_result}"
+            __zoxide_result=''
+            \builtin zle reset-prompt
+            \builtin zle accept-line
+        else
+            \builtin zle reset-prompt
+        fi
+    }
+    \builtin zle -N __zoxide_z_complete_helper
+
+    [[ "${+functions[compdef]}" -ne 0 ]] && \compdef __zoxide_z_complete cd
 fi
 
 # =============================================================================
