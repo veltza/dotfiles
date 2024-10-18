@@ -30,5 +30,5 @@ killall -q lf; rm -f "${XDG_RUNTIME_DIR}"/lf.*.sock
 sleep 0.1
 
 case "$(cat "$shutdown_cmd")" in
-    poweroff|reboot) systemctl $(cat "$shutdown_cmd") ;;
+    poweroff|reboot) exec systemctl $(cat "$shutdown_cmd") ;;
 esac

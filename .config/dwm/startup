@@ -30,6 +30,6 @@ killall -q lf; rm -f "${XDG_RUNTIME_DIR}"/lf.*.sock
 sleep 0.1
 
 case $exitcode in
-    101) systemctl poweroff ;;
-    102) systemctl reboot ;;
+    101) exec systemctl poweroff ;;
+    102) exec systemctl reboot ;;
 esac
