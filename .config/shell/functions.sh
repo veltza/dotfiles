@@ -1,24 +1,40 @@
+# Report the current working directory to the terminal
+update_terminal_cwd() {
+    local title=$PWD
+    case "$title" in
+        $HOME) title=$USER ;;
+        $HOME*) title="~${title#$HOME}" ;;
+    esac
+    printf "\033]0;%s\007" "$title"
+    [ -n "${WT_SESSION:-}" ] && printf "\033]9;9;%s\007" "$(cygpath -w "$PWD")"
+    [ -n "${WT_SESSION:-}" ] || printf "\033]7;file://%s%s\007" "$(hostname)" "$(urlencode_cwd)"
+}
+
+urlencode_cwd() {
+    printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg'
+}
+
 # Alias for lf
 lf() {
-    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" "$@" && cdlf
+    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path" "$@" && cdlf
     update_terminal_cwd
 }
 
 # Change working dir in shell to last dir in lf
 cdlf() {
-    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/lf-last-dir-path" 2>/dev/null)
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path" 2>/dev/null)
     [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
 }
 
 # Alias for yazi
 y() {
-    command yazi "$@" --cwd-file="${XDG_RUNTIME_DIR:-$HOME}/yazi-cwd-file" && cdy
+    command yazi "$@" --cwd-file="${XDG_RUNTIME_DIR:-$HOME/.cache}/yazi-cwd-file" && cdy
     update_terminal_cwd
 }
 
 # Change working dir in shell to last dir in yazi
 cdy() {
-    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME}/yazi-cwd-file" 2>/dev/null)
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME/.cache}/yazi-cwd-file" 2>/dev/null)
     [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
 }
 
@@ -34,9 +50,16 @@ tm() {
     update_terminal_cwd
 }
 
+# Toggle side-by-side view in the delta pager
+delta-toggle() {
+    local sbs=${DELTA_FEATURES:-'+'}
+    [ $sbs = '+' ] && sbs=+side-by-side || sbs=+
+    export DELTA_FEATURES=$sbs
+}
+
 # Run the system update in a tmux session
 update() {
-    if [ -n "${TMUX:-}" ]; then
+    if [ -n "${TMUX:-}" ] || [ "$(uname -o)" = 'Msys' ]; then
         system-update
     elif tmux has-session -t 'Update' 2> /dev/null; then
         tmux attach-session -t 'Update' \; new-window \; send-keys "system-update" C-m

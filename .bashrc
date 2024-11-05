@@ -4,18 +4,10 @@ case $- in
       *) return;;
 esac
 
-# Report the current working directory to terminal
-update_terminal_cwd() {
-    local title=$PWD
-    case "$PWD" in
-        $HOME) title=$USER ;;
-        $HOME*) title="~${PWD#$HOME}" ;;
-    esac
-    local cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
-    printf "\033]0;%s\007" "$title"
-    printf "\033]7;file://%s%s\007" "$HOSTNAME" "$cwd"
-}
-update_terminal_cwd
+# Include shell functions
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions.sh"
+
+# Report the current working directory to the terminal when the directory is changed
 export PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+";"}update_terminal_cwd"
 
 # Data dir
@@ -53,10 +45,9 @@ if ! shopt -oq posix && [ -z "${BASH_COMPLETION_VERSINFO:-}" ]; then
     fi
 fi
 
-# Aliases, functions and zoxide
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bash-dirhistory"
+# Aliases, dirhistory and zoxide
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases.sh"
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/dirhistory.bash"
 command -v zoxide &> /dev/null && eval "$(zoxide init bash)"
 
 # Set up lf key binding

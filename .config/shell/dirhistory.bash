@@ -1,12 +1,9 @@
-# Directory history for Bash and zoxide (optional)
+# Directory history for Bash and optional zoxide
 #
 # Usage
-# cd -- ( list current history )
-# cd -num ( go to num directory )
-# cd - ( go to previous directory )
-#
-# a heavily modified version of
-# https://superuser.com/questions/299694/is-there-a-directory-history-for-bash
+# cd -num     (go to num directory)
+# cd -        (go to previous directory)
+# cdi dirname (cd command with interactive selection - requires zoxide)
 
 function cd()
 {
@@ -24,10 +21,6 @@ function __dirhistory_cd()
 { 
     local stacksize=10
     local opts='' new_dir='' dir='' cnt=1
-    if [ $# -eq 1 ] && [ "$1" = "--" ]; then
-        dirs -v
-        return
-    fi
     while [[ "${1:-}" =~ ^-(L|P|e|@)+$ ]]; do
         opts="$opts $1"
         shift
@@ -38,7 +31,7 @@ function __dirhistory_cd()
         new_dir=$(dirs -l +${1:1}) || return
     else
         [ "${1:-}" = "--" ] && shift
-        if [ $# -eq 0 ]; then
+        if [ $# -eq 0 ] && [ -z "$__dirhistory_cdi" ]; then
             new_dir=$HOME
         elif [ $# -eq 1 ] && [ -d "$1" ]; then
             new_dir=$1

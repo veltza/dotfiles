@@ -32,6 +32,7 @@ export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 export EDITOR=nvim
 export SUDO_EDITOR=nvim
 export BROWSER=chromium
+export TERMINAL=st
 
 # Less Colors for Man Pages
 export LESS_TERMCAP_mb=$(printf '\33[01;31m')    # begin blinking
@@ -57,7 +58,7 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ] && export COLORTERM=truecolor
 
 # ls colors
-[ ! -f "$XDG_CONFIG_HOME/shell/ls_colors" ] || . "$XDG_CONFIG_HOME/shell/ls_colors"
+[ ! -f "$XDG_CONFIG_HOME/shell/ls_colors.sh" ] || . "$XDG_CONFIG_HOME/shell/ls_colors.sh"
 
 # Set locale
 [ ! -f "$XDG_CONFIG_HOME/locale.conf" ] || . "$XDG_CONFIG_HOME/locale.conf"

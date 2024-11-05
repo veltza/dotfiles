@@ -1,20 +1,13 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-# Report the current working directory to terminal
-update_terminal_cwd() {
-    local title=$PWD
-    case "$PWD" in
-        $HOME) title=$USER ;;
-        $HOME*) title="~${PWD#$HOME}" ;;
-    esac
-    local cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
-    printf "\033]0;%s\007" "$title"
-    printf "\033]7;file://%s%s\007" "$HOST" "$cwd"
-}
-update_terminal_cwd
+# Include shell functions
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions.sh"
+
+# Report the current working directory to the terminal when the directory is changed
 autoload add-zsh-hook
 add-zsh-hook chpwd update_terminal_cwd
+update_terminal_cwd
 
 # Data dir
 mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
@@ -88,9 +81,8 @@ bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
 bindkey -M menuselect '^[[Z' reverse-menu-complete # Shift+Tab
 
-# Aliases and functions
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases"
-source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/functions"
+# Aliases
+source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases.sh"
 
 # Set up lf key binding
 command -v lf &> /dev/null && bindkey -s '^o' '^u^klf\n'
