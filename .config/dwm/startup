@@ -1,9 +1,15 @@
 #!/bin/dash
 
+system() {
+    systemctl "$@"
+    xsetroot -cursor_name watch 2>/dev/null
+    sleep 2147483647
+}
+
 xsettingsd &
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
-. colortemp
-. tearfree
+colortemp
+tearfree
 picom &
 dunst &
 setbg &
@@ -22,7 +28,6 @@ while [ ${exitcode:-100} -eq 100 ]; do
 done
 
 setbg --clear
-#xsetroot -cursor_name watch 2>/dev/null
 dwm-lock stop
 killall -q xsettingsd polkit-gnome-authentication-agent-1
 killall -q picom dunst dsblocks pactl easyeffects udiskie
@@ -30,6 +35,6 @@ killall -q lf; rm -f "${XDG_RUNTIME_DIR}"/lf.*.sock
 sleep 0.1
 
 case $exitcode in
-    101) exec systemctl poweroff ;;
-    102) exec systemctl reboot ;;
+    101) system poweroff ;;
+    102) system reboot ;;
 esac
