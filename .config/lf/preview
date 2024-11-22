@@ -50,7 +50,10 @@ preview_mediainfo() {
 }
 
 preview_appimage() {
-    if [ ! -x "$1" ]; then
+    if exists 7z; then
+        7z l "$1"
+        exit 0
+    elif [ ! -x "$1" ]; then
         echo "'$1' is not executable : cannot list files!"
         exit 0
     fi

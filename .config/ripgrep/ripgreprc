@@ -30,3 +30,6 @@
 
 # alias for --color=always --heading --line-number
 --pretty
+
+# Hyperlinks (OSC 8)
+--hyperlink-format=vscode
