@@ -849,6 +849,7 @@ map R delete
 map T tag-toggle
 map U unselect
 map V invert-below
+map Y &printf '%s' "$fx" | xclip -i -selection clipboard
 map zi push :zi<space>
 
 # Applications
