@@ -12,7 +12,7 @@
 # bsdtar (libarchive), catdoc, docx2txt,
 # glow (https://github.com/charmbracelet/glow), gunzip (gzip), mediainfo or
 # exiftool (perl-image-exiftool), odt2txt, pdftotext (poppler), tree,
-# unxz (xz), unzstd (zstd)
+# unxz (xz), unzstd (zstd), xlsx2csv (https://github.com/dilshod/xlsx2csv)
 #
 # Optional tools for previewer:
 # bat, chafa, imagemagick, transmission-show
@@ -863,6 +863,8 @@ map I open-with nsxiv
 
 # Navigation
 map <a-c> fzf_jump
+map <a-h> jump-prev
+map <a-l> jump-next
 map <a-j> :updir; set dironly true; down; set dironly false; open
 map <a-k> :updir; set dironly true; up; set dironly false; open
 map J push 5j
