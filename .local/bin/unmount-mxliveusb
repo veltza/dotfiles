@@ -1,0 +1,14 @@
+#!/bin/sh
+
+case "${1:-}" in
+    home|homefs) fs="homefs" ;;
+    root|rootfs) fs="rootfs" ;;
+    linux|linuxfs) fs="linuxfs" ;;
+    *) echo "Usage: $(basename "$0") homefs|rootfs|linuxfs"; exit 1 ;;
+esac
+
+dst="${XDG_RUNTIME_DIR}/mxliveusb-${fs}"
+
+sudo umount "$dst" || exit 1
+sudo rmdir "$dst"
+echo "MX-Live-usb's ${fs} is unmounted"

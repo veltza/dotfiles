@@ -1,0 +1,21 @@
+#!/bin/sh
+
+case "${1:-}" in
+    home|homefs) fs="homefs" ;;
+    root|rootfs) fs="rootfs" ;;
+    linux|linuxfs) fs="linuxfs" ;;
+    *) echo "Usage: $(basename "$0") homefs|rootfs|linuxfs"; exit 1 ;;
+esac
+
+src="/run/media/$USER/MX-Live-usb1/antiX"
+dst="${XDG_RUNTIME_DIR}/mxliveusb-${fs}"
+
+[ ! -e "$src" ] && echo "${src} is not mounted!" && exit 1
+[ ! -e "$src/$fs" ] && echo "Cannot find ‘${src}/${fs}’ !" && exit 1
+
+mkdir -p "$dst" || exit 1
+sudo mount "$src/$fs" "$dst" -o loop || exit 1
+
+echo "MX-Live-usb's ${fs} is mounted here: ${dst}"
+echo "The path is copied to clipboard."
+printf "$dst" | xclip -selection clipboard
