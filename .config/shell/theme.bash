@@ -48,7 +48,7 @@ prompt_end() {
 }
 
 prompt_main() {
-    CURRENT_BG='NONE'
+    declare -g CURRENT_BG='NONE'
     prompt_context
     prompt_virtualenv
     prompt_dir
