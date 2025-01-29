@@ -57,6 +57,11 @@ autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '\C-x\C-e' edit-command-line
 
+# Copy the earlier word from the previous line. (Should be used with Alt+.)
+autoload -Uz copy-earlier-word
+zle -N copy-earlier-word
+bindkey "^[m" copy-earlier-word  # Alt+m
+
 # Make sure the following completion dirs are in fpath
 fpath[(i)/usr/local/share/zsh/site-functions]=()
 fpath[(i)/usr/share/zsh/site-functions]=()
