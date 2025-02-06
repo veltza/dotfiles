@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# This is an xdg-open wrapper that does the following:
+# - Opens a text file in an existing Neovim instance or opens a new window for
+#   Neovim and the file.
+# - Delegates non-text files and urls to the xdg-open utility.
+# - Removes the localhost from file urls, because some openers like kde-open
+#   don't work with the hostname. Note that the xdg-open utility can
+#   re-delegate files and urls to the openers that come with the desktop
+#   environments.
+# - If called via the tmux-open symlink, does the same things as above, but
+#   opens a text file in an existing Neovim instance in the current tmux
+#   session. Or opens a new tmux window for Neovim and the file.
+#
+# Dependencies: find, grep, neovim, ps, sed, xargs, xdotool
+
+remove_localhost() {
+    printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
+}
+
+urldecode() {
+    printf "$(echo "${1:-}" | sed -e 's@%\([a-f0-9A-F]\{2\}\)@\\x\1@g')"
+}
+
+activate_window() {
+    if ! command -v xdotool >/dev/null; then
+        echo "xdg-open: nvim window cannot be activated because xdotool is not installed" 1>&2
+        return 1
+    fi
+    local pid=${1:-} winid=""
+    while [ -n "$pid" ] && [ "$pid" -gt 0 ] && [ -z "$winid" ]; do
+        winid=$(xdotool search --pid $pid)
+        pid=$(ps -o ppid= -p $pid | xargs)
+    done
+    [ -n "$winid" ] && xdotool windowactivate "$winid"
+}
+
+open_in_terminal() {
+    local IFS=$'\n' servers= server= pid=
+    local file=$1 cursor="call cursor($2,$3)"
+    local term_exec=${TERMINAL:-st} term_earg=-e
+    read -d '' -r -a servers <<< "$(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'nvim.*' -printf "%C+ %p\n" | sort -r)"
+    for server in "${servers[@]}"; do
+        server=${server#* }
+        pid=${server%.*}
+        pid=${pid##*.}
+        if [[ "$(ps -hp "$pid" -o command 2>/dev/null)" =~ (^nvim |/nvim ) ]]; then
+            nvim --server "$server" --remote "${file}"
+            nvim --server "$server" --remote-send "<ESC>:$cursor<CR>zz:<ESC>"
+            activate_window $pid
+            return
+        fi
+    done
+
+    if command -v xdg-terminal-exec >/dev/null; then
+        term_exec=xdg-terminal-exec
+        term_earg=""
+    else
+        case "$term_exec" in
+            gnome-terminal) term_earg=-- ;;
+            xfce4-terminal) term_earg=-x ;;
+                         *) term_earg=-e ;;
+        esac
+    fi
+    exec $term_exec $term_earg nvim "$file" "+$cursor"
+}
+
+open_in_tmux() {
+    local type= target=
+    local file=$(printf '%s' "$1" | sed -e 's/ /\\ /g' -e 's/"/\\"/g' -e "s/'/\\\\'/g")
+    local cursor="call cursor($2,$3)"
+    local nvim_panes=$(tmux list-panes -s -F "#S:#I.#P #W #T #F" | grep -e nvim -e NVIM)
+    if [ -n "$nvim_panes" ]; then
+        # Search for nvim in the current window, the previous window or other windows
+        for type in ' \*$' ' -$' ''; do
+            target="$(printf '%s' "$nvim_panes" | grep "$type" | head -n 1 | cut -d ' ' -f1)"
+            if [ -n "$target" ]; then
+                tmux send-keys -t "$target" 'Escape' &&
+                tmux send-keys -t "$target" -l ":e ${file}" &&
+                tmux send-keys -t "$target" 'Enter' &&
+                tmux send-keys -t "$target" -l ":$cursor" &&
+                tmux send-keys -t "$target" 'Enter' 'zz:' 'Escape' &&
+                tmux select-window -t "$target"
+                return
+            fi
+        done
+    fi
+    tmux new-window "nvim ${file} '+$cursor'"
+}
+
+open_with_nvim() {
+    local file=${1:-} row=1 col=1 decode=true vscode=false
+    if [[ $file =~ ^vscode://file/ ]]; then
+        vscode=true
+        file=${file#vscode://file}
+        col=${file##*:}
+        file=${file%:$col}
+        row=${file##*:}
+        file=${file%:$row}
+        [ "$file" = "$row" ] && row=$col && col=1
+        [ "$file" = "$row" ] && row=1 && col=1
+        [ -n "$row" ] && [ "$row" -gt 0 ] || { row=1; col=1; }
+    elif [[ $file =~ ^file:/// ]]; then
+        file=${file#file://}
+    elif [[ $file =~ ^file:/[^/] ]]; then
+        file=${file#file:}
+    elif [ -e "$file" ]; then
+        file=$(readlink -f "$file")
+        decode=false
+    else
+        return 1
+    fi
+
+    [ "$decode" = true ] && file=$(urldecode "$file")
+    [ -z "$file" ] || [ ! -e "$file" ] && exit
+
+    case "$(file -b --mime-type "$file")" in
+        inode/directory) [ "$(basename "$0")" = tmux-open ] || return 1 ;;
+        application/x-shellscript|text/*) ;;
+        *) [ "$vscode" = true ] && exit || return 1 ;;
+    esac
+
+    case "$(basename "$0")" in
+        tmux-open) open_in_tmux "$file" "$row" "$col" ;;
+                *) open_in_terminal "$file" "$row" "$col" ;;
+    esac
+    return 0
+}
+
+case "${1:-}" in
+    --help|--manual|--version)
+        exec /usr/bin/xdg-open "$@"
+        ;;
+    "")
+        [ "$(basename "$0")" = tmux-open ] && exit
+        exec /usr/bin/xdg-open "$@"
+        ;;
+esac
+
+[ "${1:-}" = "--" ] && shift
+
+file=$(remove_localhost "$1")
+open_with_nvim "$file" || exec /usr/bin/xdg-open "$file"
