@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#
 # This is an xdg-open wrapper that does the following:
 # - Opens a text file in an existing Neovim instance or opens a new window for
 #   Neovim and the file.
@@ -11,7 +12,9 @@
 #   opens a text file in an existing Neovim instance in the current tmux
 #   session. Or opens a new tmux window for Neovim and the file.
 #
-# Dependencies: find, grep, neovim, ps, sed, xargs, xdotool
+# Dependencies: file, find, grep, neovim, ps, sed, xdotool, tmux (optional)
+#
+# 2025-02-07 veltza
 
 remove_localhost() {
     printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
@@ -21,21 +24,17 @@ urldecode() {
     printf "$(echo "${1:-}" | sed -e 's@%\([a-f0-9A-F]\{2\}\)@\\x\1@g')"
 }
 
-activate_window() {
-    if ! command -v xdotool >/dev/null; then
-        echo "xdg-open: nvim window cannot be activated because xdotool is not installed" 1>&2
-        return 1
-    fi
+find_winid_by_pid() {
     local pid=${1:-} winid=""
     while [ -n "$pid" ] && [ "$pid" -gt 0 ] && [ -z "$winid" ]; do
         winid=$(xdotool search --pid $pid)
-        pid=$(ps -o ppid= -p $pid | xargs)
+        pid=$(ps -o ppid= -p $pid | sed -e "s/[[:space:]]//g")
     done
-    [ -n "$winid" ] && xdotool windowactivate "$winid"
+    printf '%s' "$winid"
 }
 
 open_in_terminal() {
-    local IFS=$'\n' servers= server= pid=
+    local IFS=$'\n' servers= server= pid= winid=
     local file=$1 cursor="call cursor($2,$3)"
     local term_exec=${TERMINAL:-st} term_earg=-e
     read -d '' -r -a servers <<< "$(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'nvim.*' -printf "%C+ %p\n" | sort -r)"
@@ -44,10 +43,13 @@ open_in_terminal() {
         pid=${server%.*}
         pid=${pid##*.}
         if [[ "$(ps -hp "$pid" -o command 2>/dev/null)" =~ (^nvim |/nvim ) ]]; then
-            nvim --server "$server" --remote "${file}"
-            nvim --server "$server" --remote-send "<ESC>:$cursor<CR>zz:<ESC>"
-            activate_window $pid
-            return
+            winid=$(find_winid_by_pid "$pid")
+            if [ -n "$winid" ]; then
+                nvim --server "$server" --remote "${file}"
+                nvim --server "$server" --remote-send "<ESC>:$cursor<CR>zz:<ESC>"
+                xdotool windowactivate "$winid"
+                return
+            fi
         fi
     done
 
