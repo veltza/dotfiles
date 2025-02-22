@@ -131,7 +131,7 @@ cmd open ${{
                 mntdir="$f-fusearchive"
                 if [ ! -d "$mntdir" ]; then
                     mkdir "$mntdir"
-                    fuse-archive "$f" "$mntdir"
+                    fuse-archive -q "$f" "$mntdir"
                 fi
                 mntdir="$(printf '%s' "$mntdir" | sed 's/\\/\\\\/g;s/"/\\"/g')"
                 lf -remote "send $id cd \"$mntdir\""
