@@ -53,6 +53,7 @@ emojis="😀 grinning face
 😪 sleepy face
 🤤 drooling face
 😴 sleeping face
+🫩 face with bags under eyes
 😷 face with medical mask
 🤒 face with thermometer
 🤕 face with head-bandage
@@ -317,6 +318,7 @@ emojis="😀 grinning face
 👥 busts in silhouette
 🫂 people hugging
 👣 footprints
+🫆 fingerprint
 🐵 monkey face
 🐒 monkey
 🦍 gorilla
@@ -496,11 +498,13 @@ emojis="😀 grinning face
 🧄 garlic
 🧅 onion
 🍄 mushroom
+🪾 leafless tree
 🥜 peanuts
 🫘 beans
 🌰 chestnut
 🫚 ginger root
 🫛 pea pod
+🫜 root vegetable
 🍞 bread
 🥐 croissant
 🥖 baguette bread
@@ -978,6 +982,7 @@ emojis="😀 grinning face
 🪘 long drum
 🪇 maracas
 🪈 flute
+🪉 harp
 📱 mobile phone
 📲 mobile phone with arrow
 ☎️ telephone
@@ -1115,6 +1120,7 @@ emojis="😀 grinning face
 🧰 toolbox
 🧲 magnet
 🪜 ladder
+🪏 shovel
 ⚗️ alembic
 🧪 test tube
 🧫 petri dish
@@ -1298,6 +1304,7 @@ emojis="😀 grinning face
 ©️ copyright
 ®️ registered
 ™️ trade mark
+🫟 splatter
 #️⃣ keycap: #
 *️⃣ keycap: *
 0️⃣ keycap: 0
@@ -1440,6 +1447,7 @@ emojis="😀 grinning face
 🇨🇳 flag: China
 🇨🇴 flag: Colombia
 🇨🇵 flag: Clipperton Island
+🇨🇶 flag: Sark
 🇨🇷 flag: Costa Rica
 🇨🇺 flag: Cuba
 🇨🇻 flag: Cape Verde
