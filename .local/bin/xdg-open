@@ -14,7 +14,8 @@
 #
 # Dependencies: file, find, grep, neovim, ps, sed, xdotool, tmux (optional)
 #
-# 2025-02-07 veltza
+# 2025-02-07 veltza: first implementation
+# 2025-03-16 veltza: fixed tmux issues
 
 remove_localhost() {
     printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
@@ -55,7 +56,7 @@ open_in_terminal() {
 
     if command -v xdg-terminal-exec >/dev/null; then
         term_exec=xdg-terminal-exec
-        term_earg=""
+        term_earg=--
     else
         case "$term_exec" in
             gnome-terminal) term_earg=-- ;;
@@ -68,7 +69,7 @@ open_in_terminal() {
 
 open_in_tmux() {
     local type= target=
-    local file=$(printf '%s' "$1" | sed -e 's/ /\\ /g' -e 's/"/\\"/g' -e "s/'/\\\\'/g")
+    local file=$(printf '%s' "$1" | sed -e 's/ /\\ /g' -e 's/"/\\"/g' -e "s/'/\\\\'/g" -e 's/%/\\%/g')
     local cursor="call cursor($2,$3)"
     local nvim_panes=$(tmux list-panes -s -F "#S:#I.#P #W #T #F" | grep -e nvim -e NVIM)
     if [ -n "$nvim_panes" ]; then
@@ -128,17 +129,24 @@ open_with_nvim() {
     return 0
 }
 
+bin=/usr/bin/
+
 case "${1:-}" in
     --help|--manual|--version)
-        exec /usr/bin/xdg-open "$@"
+        exec "$bin/xdg-open" "$@"
         ;;
     "")
         [ "$(basename "$0")" = tmux-open ] && exit
-        exec /usr/bin/xdg-open "$@"
+        exec "$bin/xdg-open" "$@"
         ;;
 esac
 
 [ "${1:-}" = "--" ] && shift
 
 file=$(remove_localhost "$1")
-open_with_nvim "$file" || exec /usr/bin/xdg-open "$file"
+open_with_nvim "$file" && exit
+
+case "$(basename "$0")" in
+    tmux-open) exec "$bin/xdg-open" "$file" >/dev/null ;;
+            *) exec "$bin/xdg-open" "$file" ;;
+esac
