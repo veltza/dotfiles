@@ -28,15 +28,16 @@ dmenu.background: #07070d
 dmenu.selforeground: #E5FBFF
 dmenu.selbackground: #4f4f4f
 
-St.font:            monospace:style=Medium:size=10:antialias=true:autohint=true
+St.font:            monospace:size=10:antialias=true:autohint=true
 St.font_fallback1:  JoyPixels:size=10:antialias=true:autohint=true
 St.font_fallback2:  Liberation Mono:size=10.5:antialias=true:autohint=true
 St.font_fallback3:  Noto Sans CJK JP:style=Medium:size=10:antialias=true:autohint=true
-St.font_fallback4:  Symbola:size=13.5:antialias=true:autohint=true
+St.font_fallback4:  Symbola Custom:size=13.5:antialias=true:autohint=true
 St.cols:            114
 St.rows:            34
 St.borderpx:        2
 St.minlatency:      8.0
+St.maxlatency:      33.0
 St.alpha:           1.0
 St.alphaUnfocused:  1.0
 St.foreground:      gray90
@@ -44,12 +45,14 @@ St.background:      black
 St.bgUnfocused:     black
 St.color4:          #0070ff
 St.color15:         #f8f8f8
+St.flashlabelbg:    20
+St.highlightbg:     125
 St.boxdraw:         1
 St.boxdraw_bold:    1
 St.boxdraw_braille: 0
 St.hidecursor:      1
 St.ligatures:       1
-St.hyperlinkstyle:    0
+St.hyperlinkstyle:    1
 St.showhyperlinkhint: 1
 St.disablehyperlinks: 0
 St.autoscrolltimeout:      16
