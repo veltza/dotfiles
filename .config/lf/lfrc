@@ -59,17 +59,15 @@ set ifs "\n"
 ####################
 
 cmd on-cd &{{
-    # Show current directory in window title
+    # Send window title and current working directory to terminal
     case "$PWD" in
         $HOME) title=$USER ;;
         $HOME*) title="~${PWD#$HOME}" ;;
         *) title=$PWD ;;
     esac
-    printf "\033]0;%s - lf\007" "$title" > /dev/tty
-
-    # Report the current working directory to terminal
+    title=$(printf '%s' "$title" | sed 's/\\/\\\\/g;s/"/\\"/g')
     cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
-    printf "\033]7;file://%s%s\007" "$(hostname)" "$cwd" > /dev/tty
+    lf -remote "send $id tty-write \"\033]0;$title\007\033]7;file://$(hostname)$cwd\007\""
 
     # Show git branch in prompt
     set +e

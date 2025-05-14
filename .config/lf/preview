@@ -22,7 +22,7 @@ preview_image() {
         opts="-f symbols --animate false --polite on"
     else
         w=$2 && [ $w -gt 70 ] && w=70
-        opts="-f sixels --animate false --polite on --dither ordered --dither-intensity 0.85"
+        opts="-f sixels --animate false --polite on -t 1 --bg black --dither ordered --dither-intensity 0.85"
     fi
     case "$f" in
         *.bmp|*.six)
