@@ -59,7 +59,7 @@ delta-toggle() {
 
 # Run the system update in a tmux session
 update() {
-    if [ -n "${TMUX:-}" ] || [ "$(uname -o)" = 'Msys' ]; then
+    if [ -n "${TMUX:-}" ] || [ "$(uname -o 2>/dev/null)" = 'Msys' ]; then
         system-update
     elif tmux has-session -t 'Update' 2> /dev/null; then
         tmux attach-session -t 'Update' \; new-window \; send-keys "system-update" C-m
@@ -74,8 +74,14 @@ system-update() {
         yay -Pw 2>/dev/null; yay
     elif command -v pacman &>/dev/null; then
         sudo pacman -Syu
-    else
+    elif command -v aupdate &>/dev/null; then
         aupdate
+    elif command -v apt &>/dev/null; then
+        sudo apt update && sudo apt upgrade
+    elif command -v pkg &>/dev/null; then
+        doas pkg upgrade && doas freebsd-update fetch install
+    elif command -v pkg_add &>/dev/null; then
+        doas pkg_add -u && doas syspatch
     fi
 }
 

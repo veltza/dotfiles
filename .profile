@@ -29,6 +29,7 @@ export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
 export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 
 # Default apps
+export VISUAL=nvim
 export EDITOR=nvim
 export SUDO_EDITOR=nvim
 export BROWSER=chromium

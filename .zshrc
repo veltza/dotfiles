@@ -28,9 +28,16 @@ ZLE_REMOVE_SUFFIX_CHARS=$' \t\n;&)'
 # Set up the prompt
 if [[ $(tty) =~ tty[0-9]$ ]]; then
     export PROMPT_SEPARATOR=''
+    export PROMPT_PLUSMINUS='+'
     export PROMPT_ELLIPSIS='...'
     export PROMPT_BRANCH=''
     export PROMPT_CONTEXT_BG=white
+else
+    export PROMPT_SEPARATOR=$'\ue0b0'
+    export PROMPT_PLUSMINUS=$'\u00b1'
+    export PROMPT_ELLIPSIS='…'
+    export PROMPT_BRANCH=$'\ue0a0'
+    export PROMPT_CONTEXT_BG=253
 fi
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/theme.zsh"
 
@@ -38,6 +45,7 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/theme.zsh"
 bindkey -e
 bindkey '^[[1;5C' emacs-forward-word    # Ctrl+Right
 bindkey '^[[1;5D' emacs-backward-word   # Ctrl+Left
+bindkey '\e[M' kill-word                # Ctrl+Delete
 bindkey '^[[3;5~' kill-word             # Ctrl+Delete
 bindkey '^U' backward-kill-line         # Ctrl+U
 bindkey '^[W' kill-region               # Alt+W

@@ -31,8 +31,14 @@ shopt -s checkwinsize
 # Set up the prompt
 if [[ $(tty) =~ tty[0-9]$ ]]; then
     export PROMPT_SEPARATOR=''
+    export PROMPT_PLUSMINUS='+'
     export PROMPT_BRANCH=''
     export PROMPT_CONTEXT_BG=255
+else
+    export PROMPT_SEPARATOR=$'\ue0b0'
+    export PROMPT_PLUSMINUS=$'\u00b1'
+    export PROMPT_BRANCH=$'\ue0a0'
+    export PROMPT_CONTEXT_BG=253
 fi
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/theme.bash"
 
