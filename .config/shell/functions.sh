@@ -16,6 +16,7 @@ urlencode_cwd() {
 
 # Alias for lf
 lf() {
+    rm -f "${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path"
     command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path" "$@" && cdlf
     update_terminal_cwd
 }
