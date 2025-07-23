@@ -8,8 +8,12 @@ if [ -e "$img" ]; then
     # set the new wallpaper
     img=$(readlink -f "$img")
     case "$(file --mime-type -b "$img")" in
-        image/*) ln -srf "$img" "$bg" ;;
-        *) echo "$(basename "$0"): '$img' is not a valid image" 1>&2; exit 1 ;;
+        image/*)
+            r="" && ln --version 2>/dev/null | grep -qi gnu && r="-r"
+            ln -sf $r "$img" "$bg" ;;
+        *)
+            echo "$(basename "$0"): '$img' is not a valid image" 1>&2
+            exit 1 ;;
     esac
 elif [ "$img" = '--clear' ]; then
     # initializes screen with a black background (1x1 black pixel png)
