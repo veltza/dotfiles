@@ -16,6 +16,7 @@
 #
 # 2025-02-07 veltza: first implementation
 # 2025-03-16 veltza: fixed tmux issues
+# 2025-06-27 veltza: fixed compatibility issues with BSD systems
 
 remove_localhost() {
     printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
@@ -38,12 +39,11 @@ open_in_terminal() {
     local IFS=$'\n' servers= server= pid= winid=
     local file=$1 cursor="call cursor($2,$3)"
     local term_exec=${TERMINAL:-st} term_earg=-e
-    read -d '' -r -a servers <<< "$(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'nvim.*' -printf "%C+ %p\n" | sort -r)"
+    read -d '' -r -a servers <<< "$(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'nvim.*' | xargs ls -t)"
     for server in "${servers[@]}"; do
-        server=${server#* }
         pid=${server%.*}
         pid=${pid##*.}
-        if [[ "$(ps -hp "$pid" -o command 2>/dev/null)" =~ (^nvim |/nvim ) ]]; then
+        if [[ "$(ps -p "$pid" -o command 2>/dev/null | tail -n 1)" =~ (^nvim |/nvim ) ]]; then
             winid=$(find_winid_by_pid "$pid")
             if [ -n "$winid" ]; then
                 nvim --server "$server" --remote "${file}"
@@ -71,7 +71,7 @@ open_in_tmux() {
     local type= target=
     local file=$(printf '%s' "$1" | sed -e 's/ /\\ /g' -e 's/"/\\"/g' -e "s/'/\\\\'/g" -e 's/%/\\%/g')
     local cursor="call cursor($2,$3)"
-    local nvim_panes=$(tmux list-panes -s -F "#S:#I.#P #W #T #F" | grep -e nvim -e NVIM)
+    local nvim_panes=$(tmux list-panes -s -F "#S:#I.#P #W #T #F" | grep -e " nvim" -e " Nvim" -e " NVIM")
     if [ -n "$nvim_panes" ]; then
         # Search for nvim in the current window, the previous window or other windows
         for type in ' \*$' ' -$' ''; do
@@ -129,15 +129,16 @@ open_with_nvim() {
     return 0
 }
 
-bin=/usr/bin/
+xdg_open_bin=/usr/bin/xdg-open
+[ ! -x "$xdg_open_bin" ] && xdg_open_bin=/usr/local/bin/xdg-open
 
 case "${1:-}" in
     --help|--manual|--version)
-        exec "$bin/xdg-open" "$@"
+        exec $xdg_open_bin "$@"
         ;;
     "")
         [ "$(basename "$0")" = tmux-open ] && exit
-        exec "$bin/xdg-open" "$@"
+        exec $xdg_open_bin "$@"
         ;;
 esac
 
@@ -147,6 +148,6 @@ file=$(remove_localhost "$1")
 open_with_nvim "$file" && exit
 
 case "$(basename "$0")" in
-    tmux-open) exec "$bin/xdg-open" "$file" >/dev/null ;;
-            *) exec "$bin/xdg-open" "$file" ;;
+    tmux-open) exec $xdg_open_bin "$file" >/dev/null ;;
+            *) exec $xdg_open_bin "$file" ;;
 esac
