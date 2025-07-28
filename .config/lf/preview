@@ -28,8 +28,9 @@ preview_image() {
         *.bmp|*.six)
             magick "$1" jpg:- | chafa -s "${w}x${3}" $opts ;;
         *)
-            chafa -s "${w}x${3}" $opts "$1" ;;
+            chafa --view-size "${w}x${3}" $opts "$1" ;;
     esac
+    #[ -n "${TMUX:-}" ] && exit 1 || exit 0
 }
 
 preview_mediainfo() {
@@ -95,7 +96,7 @@ case "$f" in
     *.o)
         nm "$1" ;;
     *.md)
-        glow -s dark "$1" ;;
+        exists glow && glow -s dark "$1" || batorcat "$1" ;;
     *.7z|*.deb|*.iso|*.jar|*.rar|*.tar|*.tar.??|*.tar.???|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
         LC_TIME=en_US.UTF-8 bsdtar -t${verbose}f "$1" ;;
     *.gz)

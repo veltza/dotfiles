@@ -1,6 +1,6 @@
 ###############################################################################
 # Required tools for lf:
-# bsdtar (libarchive), coreutils, dash, gunzip (gzip), trash-cli, unrar,
+# bsdtar (libarchive), gnu coreutils, dash, gunzip (gzip), trash-cli, unrar,
 # unxz (xz), unzip, unzstd (zstd), vidir (moreutils)
 #
 # Optional tools for lf:
@@ -9,13 +9,13 @@
 # wmctrl, xclip, zoxide
 #
 # Required tools for previewer:
-# bsdtar (libarchive), catdoc, docx2txt,
-# glow (https://github.com/charmbracelet/glow), gunzip (gzip), mediainfo or
+# bsdtar (libarchive), catdoc, docx2txt, gunzip (gzip), mediainfo or
 # exiftool (perl-image-exiftool), odt2txt, pdftotext (poppler), tree,
 # unxz (xz), unzstd (zstd), xlsx2csv (https://github.com/dilshod/xlsx2csv)
 #
 # Optional tools for previewer:
-# bat, chafa, imagemagick, transmission-show
+# bat, chafa, glow (https://github.com/charmbracelet/glow), imagemagick,
+# transmission-show
 ###############################################################################
 
 ############
@@ -34,6 +34,8 @@ set scrolloff 4
 set tagfmt "\033[33m%s\033[0m"
 set cursorpreviewfmt "\033[7;90;40m"
 set preserve "mode:timestamps"
+set user_sudo sudo
+set user_setsid setsid
 
 # Directory settings
 set nohidden
@@ -119,6 +121,7 @@ cmd open ${{
     esac
     if [ -n "$chksum" ]; then
         printf '\nChecking %s checksum(s) ...\n' $chksum
+        command -v "g${chksum}" >/dev/null && chksum="g${chksum}"
         set +e; $chksum --ignore-missing -c "$f"
         set -e; printf 'Press enter to continue'; read -r ans
         exit 0
@@ -139,8 +142,8 @@ cmd open ${{
     fi
     case $(file --mime-type "$f" -b) in
         text/*|application/json|inode/x-empty) $EDITOR "$f";;
-        application/x-*executable) setsid "$f" > /dev/null 2> /dev/null & ;;
-        *) for f in $fx; do setsid xdg-open "$f" > /dev/null 2> /dev/null & done;;
+        application/x-*executable) $lf_user_setsid "$f" > /dev/null 2> /dev/null & ;;
+        *) for f in $fx; do $lf_user_setsid xdg-open "$f" > /dev/null 2> /dev/null & done;;
     esac
 }}
 
@@ -148,20 +151,20 @@ cmd open-with ${{
     set -f
     [ $# -le 0 ] && exit 0
 
-    [ "$1" != "sudo" ] && cmd=$1 || eval cmd=\${$#}
+    [ "$1" != $lf_user_sudo ] && cmd=$1 || eval cmd=\${$#}
     case "$cmd" in
         hexedit) for f in $fx; do "$@" "$f"; done ;;
         hexyl|mediainfo) "$@" $fx | less ;;
         micro|nano|nvim|vim) "$@" $fx ;;
         md5sum|sha256sum|sha512sum) lf -remote "send $id checksum $cmd" ;;
         sudoedit) lf -remote "send $id $cmd" ;;
-        sudo) exit 0 ;;
+        sudo|doas) exit 0 ;;
         pkexec)
             [ $# -gt 1 ] || exit 0
             cmd=$(printf '%s $fx >/dev/null 2>/dev/null' "$*" | tr '\n' ' ')
             lf -remote "send $id &$cmd" ;;
         *)
-            cmd=$(printf 'setsid %s $fx >/dev/null 2>/dev/null &' "$*" | tr '\n' ' ')
+            cmd=$(printf $lf_user_setsid' %s $fx >/dev/null 2>/dev/null &' "$*" | tr '\n' ' ')
             lf -remote "send $id &$cmd" ;;
     esac
 }}
@@ -176,9 +179,10 @@ cmd open-config ${{
 }}
 
 cmd open-new-terminal &{{
+    setsidcmd=$lf_user_setsid
     for e in $(env | grep "^lf_"); do eval "unset ${e%%=*}"; done
     unset f fs fx id lf LF_LEVEL
-    setsid st -d "$PWD" &
+    $setsidcmd st -d "$PWD" &
 }}
 
 # y (select for copy) and P to paste soft-link
@@ -191,11 +195,12 @@ cmd link %{{
         lf -remote "send $id echoerr no files to link"
         exit 0
     fi
+    lncmd=$(command -v gln || echo ln)
     case "$mode" in
         # symbolically copy mode is indicating a soft link
-        copy) ln -sr -t . -- "$@";;
+        copy) $lncmd -sr -t . -- "$@";;
         # while a move mode is indicating a hard link
-        move) ln -t . -- "$@";;
+        move) $lncmd -t . -- "$@";;
     esac
     rm ~/.local/share/lf/files
     lf -remote "send clear"
@@ -213,12 +218,12 @@ cmd mkfile &{{
 
 cmd sudomkdir &{{
     args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
-    lf -remote "send $id mkitem \"sudo mkdir -p\" $args"
+    lf -remote "send $id mkitem \"$lf_user_sudo mkdir -p\" $args"
 }}
 
 cmd sudomkfile &{{
     args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
-    lf -remote "send $id mkitem \"sudo touch\" $args"
+    lf -remote "send $id mkitem \"$lf_user_sudo touch\" $args"
 }}
 
 cmd mkitem ${{
@@ -260,12 +265,12 @@ cmd chmod &{{
 
 cmd chown &{{
     args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
-    lf -remote "send $id chitem \"sudo chown\" $args"
+    lf -remote "send $id chitem \"$lf_user_sudo chown\" $args"
 }}
 
 cmd sudochmod &{{
     args=''; while [ $# -gt 0 ]; do args="$args \"$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')\""; shift; done
-    lf -remote "send $id chitem \"sudo chmod\" $args"
+    lf -remote "send $id chitem \"$lf_user_sudo chmod\" $args"
 }}
 
 cmd chitem ${{
@@ -277,7 +282,7 @@ cmd chitem ${{
         exit 0
     fi
     set +e
-    if ! error=$($cmd "$@" -- $fx 2>&1); then
+    if ! error=$($cmd "$@" $fx 2>&1); then
         lf -remote "send $id echoerr $(printf '%s' "$error" | head -n 1)"
         exit 0
     fi
@@ -310,7 +315,7 @@ cmd trash ${{
 
 cmd trash_put &{{
     set -f
-    n=$(printf '%s\n' "$fx" | wc -l)
+    n=$(printf '%s\n' "$fx" | wc -l | xargs)
     if [ $n -eq 1 ]; then
         fx=$(printf '%s' "$fx" | sed -e "s/ /<space>/g")
         lf -remote "send $id push :trash<space>'$fx'<space>?<space>[y/N]<space>"
@@ -341,19 +346,15 @@ cmd fzf_jump ${{
 
 cmd sudoedit ${{
     set -f
-    set +e
-    [ -n "${XDG_RUNTIME_DIR:-}" ] && tmpdir=$XDG_RUNTIME_DIR || tmpdir=${TMPDIR:-/tmp}
-    tmp="$(mktemp $tmpdir/lferror.XXXXXXXX)"
-    if ! sudoedit $fx 2> $tmp; then
-        lf -remote "send $id echoerr $(head -n 1 $tmp)"
-        cat $tmp
+    sudoeditcmd=$(command -v doasedit || echo sudoedit)
+    if ! $sudoeditcmd $fx; then
+        printf 'Press enter to continue'; read -r ans
     fi
-    rm $tmp
 }}
 
 cmd suedit ${{
     set -f;
-    sudo $EDITOR $fx
+    $lf_user_sudo $EDITOR $fx
 }}
 
 cmd checksum &{{
@@ -375,7 +376,8 @@ cmd checksum &{{
             lf -remote "send $id echo \"$s\""
         else
             lf -remote "send $id echo Computing $chktype checksum ..."
-            s=$(printf '%s: %s' "$chktype" "$($1 -- $fx)" | sed 's/"/\\"/g');
+            chksum=$(command -v "g${1}" || echo $1)
+            s=$(printf '%s: %s' "$chktype" "$($chksum -- $fx)" | sed 's/"/\\"/g');
             lf -remote "send $id echo \"$s\""
         fi
     else
@@ -391,7 +393,8 @@ cmd checksums ${{
         if [ -d "$f" ]; then
             printf "'%s' is a directory\n" "$f"
         else
-            printf '%s\n' "$($1 -- $f)"
+            chksum=$(command -v "g${1}" || echo $1)
+            printf '%s\n' "$($chksum -- $f)"
         fi
     done
     printf 'Press enter to continue'; read -r ans
@@ -469,7 +472,8 @@ cmd unarchive ${{
             *) mkdir -p -- $targetdir
         esac
     fi
-    oldfiles=$(ls --group-directories-first -A)
+    lscmd=$(command -v gls || echo ls)
+    oldfiles=$($lscmd --group-directories-first -A)
     case "$f" in
         *.7z|*.deb|*.iso|*.jar|*.tar|*.tar.*|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
             bsdtar -xvf "$f" -C "$targetdir" ;;
@@ -514,7 +518,7 @@ cmd unarchive ${{
     else
         # Toggle extracted files and dirs and select the first item
         count=0
-        for n in $(ls --group-directories-first -A); do
+        for n in $($lscmd --group-directories-first -A); do
             for o in $oldfiles; do
                 [ "$n" = "$o" ] && break
             done
@@ -641,15 +645,16 @@ cmd compress ${{
 
     # compress
     [ -n "$adir" ] && mkdir -p $tmpdir/$adir
+    cpcmd=$(command -v gcp || echo cp)
     parents='--parents' && [ "$mode" = "flat" ] && parents=''
-    printf '%s' "$files" | tr '\n' '\0' | xargs -0 cp $parents -a -t $tmpdir/$adir --
+    printf '%s' "$files" | tr '\n' '\0' | xargs -0 $cpcmd $parents -a -t $tmpdir/$adir --
     workdir=$PWD
     cd $tmpdir
     if [ "$ext" = "zip" ]; then
         q='' && [ -z "$verbose" ] && q='-q'
-        find . -maxdepth 1 -printf "%P\n" | zip $q -r $workdir/$aname.$ext -@
+        find . -maxdepth 1 | sed -e 's|^\./||' -e 's|^\.$||' | zip $q -r $workdir/$aname.$ext -@
     else
-        find . -maxdepth 1 -printf "%P\n" | bsdtar -a${verbose}cf $workdir/$aname.$ext -T -
+        find . -maxdepth 1 | sed -e 's|^\./||' -e 's|^\.$||' | bsdtar -a${verbose}cf $workdir/$aname.$ext -T -
     fi
     cd $workdir
     rm -rf $tmpdir
@@ -802,9 +807,14 @@ cmd zi ${{
     [ -z "$target" ] || lf -remote "send $id cd \"$target\""
 }}
 
-cmd ls !echo "\nls $(pwd | sed "s|$HOME|~|")";ls --color=auto --group-directories-first -alFh
-cmd sudolf $sudo -E lf
-cmd sudorm $sudo rm -r -i -- $fx
+cmd ls !{{
+    echo "\nls $(pwd | sed "s|$HOME|~|")"
+    lscmd=$(command -v gls || echo ls)
+    $lscmd --color=auto --group-directories-first -alFh
+}}
+
+cmd sudolf $$lf_user_sudo -E lf
+cmd sudorm $$lf_user_sudo rm -r -i -- $fx
 cmd q quitcmd
 
 ################
@@ -817,6 +827,7 @@ map m
 map t
 map J
 map K
+vmap p
 
 # Basic functions
 map . set hidden!
@@ -824,35 +835,39 @@ map * mark-remove
 map C clear
 map cc clear
 map cd push :cd<space>
-map cm push :chmod<space>
-map co push :chown<space>
-map csm push :sudochmod<space>
-map D trash_put
-map <a-d> trash_restore
+nmap cm push :chmod<space>
+nmap co push :chown<space>
+nmap csm push :sudochmod<space>
+nmap D trash_put
+nmap <a-d> trash_restore
+vmap d :visual-accept; cut
 map <enter> open
 map i $set -f; LESSOPEN='| ~/.config/lf/preview %s 0 0 0 0 verbose' less -R $f
+# map i $set -f; ~/.config/lf/preview $f 0 0 0 0 verbose | less -R
 map <a-m> mark-save
 map mm mark-save
-map md push :mkdir<space>
-map mf push :mkfile<space>
-map msd push :sudomkdir<space>
-map msf push :sudomkfile<space>
+nmap md push :mkdir<space>
+nmap mf push :mkfile<space>
+nmap msd push :sudomkdir<space>
+nmap msf push :sudomkfile<space>
 map <c-o> open-new-terminal
-map o push :open-with<space>
-map O push :open-with<space>pkexec<space>
-map P link
+nmap o push :open-with<space>
+nmap O push :open-with<space>pkexec<space>
+nmap P link
 map q quitcmd
 map <c-r> :on-cd; reload
-map R delete
+nmap R delete
 map T tag-toggle
-map U unselect
-map V invert-below
-map Y &printf '%s' "$fx" | xclip -i -selection clipboard
+nmap U unselect
+vmap U visual-unselect
+vmap y :visual-accept; copy
+nmap Y &printf '%s' "$fx" | xclip -i -selection clipboard
 map zi push :zi<space>
 
 # Applications
 map bc open-config
-map br bulkrename
+nmap br bulkrename
+vmap br :visual-accept; bulkrename
 # map e $set -f; case "$EDITOR" in ?vim) $EDITOR -p $fx;; *) $EDITOR $fx;; esac
 map e $set -f; $EDITOR $fx
 map E sudoedit
@@ -923,7 +938,9 @@ ${{
     for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
         [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
     done
-    command -v zoxide >/dev/null && lf -remote "send $id map cd push :z<space>" || true
+    command -v zoxide >/dev/null && lf -remote "send $id map cd push :z<space>"
+    command -v doas >/dev/null && lf -remote "send $id set user_sudo doas"
+    ! command -v setsid >/dev/null && lf -remote "send $id set user_setsid env" || true
 }}
 
 # Update the prompt (git branch etc.)
