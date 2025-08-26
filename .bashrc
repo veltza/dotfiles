@@ -28,6 +28,9 @@ shopt -s histappend
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
+# The pattern ‘**’ matches all files and zero or more dirs and subdirs.
+shopt -s globstar
+
 # Set up the prompt
 if [[ $(tty) =~ tty[0-9]$ ]]; then
     export PROMPT_SEPARATOR=''

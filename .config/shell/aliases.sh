@@ -3,7 +3,6 @@ if command -v bat &>/dev/null; then
     alias -g -- --help='--help | bat --language=help --style=plain' 2>/dev/null
 fi
 alias bc="bc -l ${XDG_CONFIG_HOME:-$HOME/.config}/bc/bcrc"
-alias bm='bashmount'
 alias cal='cal -mw' && command -v ncal >/dev/null && alias cal='ncal -Mwb'
 alias cd-='cd -'
 alias cd..='cd ../'
@@ -24,29 +23,41 @@ alias 9='cd -9'
 alias cp='cp -i'
 alias df='df -h'
 alias d='dirs -v'
-alias diff='diff --color=always --palette=":ad=32;1:de=31;1"'
+if diff --color=always /dev/null /dev/null &>/dev/null; then
+    if diff --palette="" /dev/null /dev/null &>/dev/null; then
+        alias diff='diff --color=always --palette=":ad=32;1:de=31;1"'
+    else
+        alias diff='diff --color=always'
+    fi
+fi
 alias dotfiles="git --git-dir=$HOME/.dotfiles --work-tree=$HOME"
-alias egrep='egrep --color=auto'
 alias fd='fd --hyperlink'
 alias fdi='find 2>/dev/null . -type d -iname'
 alias ffi='find 2>/dev/null . -type f -iname'
 alias Fdi='find 2>/dev/null . -type d -name'
 alias Ffi='find 2>/dev/null . -type f -name'
 alias free='free -h'
-alias fgrep='fgrep --color=auto'
 alias gau='git add --update'
 alias gb='git branch'
 alias gba='git branch --all'
 alias gc='git commit'
 alias gd='git diff'
 alias gds='git diff --staged'
+alias glg='git log --stat'
+alias glgp='git log --patch'
+alias glol='git log --graph --pretty="%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset"'
+alias glola='git log --graph --pretty="%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset" --all'
 alias gst='git status'
-alias grep='grep --color=auto'
+grep --color=auto colortest <<< "colortest" &>/dev/null && alias grep='grep --color=auto'
 alias h="history${ZSH_VERSION+ 1}"
 alias hs="history${ZSH_VERSION+ 1} | grep -i"
 alias hsc="history${ZSH_VERSION+ 1} | grep"
 alias ip='ip -color=auto'
-alias ls='ls --group-directories-first --color=auto'
+if command -v gls &>/dev/null; then
+    alias ls='gls --group-directories-first --color=auto'
+elif ls --group-directories-first --color=auto &>/dev/null; then
+    alias ls='ls --group-directories-first --color=auto'
+fi
 alias l='ls -lFh'
 alias la='ls -A'
 alias ll='ls -alFh'

@@ -13,11 +13,17 @@
 [ -d "$HOME/bin" ] && PATH="$HOME/bin:$PATH"
 [ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
 
-# Fixing paths
-export XDG_CONFIG_HOME="$HOME/.config"
+# XDG paths
 export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+    export XDG_RUNTIME_DIR="$XDG_CACHE_HOME/runtime"
+    mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+fi
+
+# App paths
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 export GOPATH="$XDG_DATA_HOME/go"
 export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
@@ -48,7 +54,7 @@ export MANROFFOPT="-c"
 
 # Less settings
 export LESSUTFCHARDEF=E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p
-export LESSHISTFILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/.lesshst"
+export LESSHISTFILE="$XDG_RUNTIME_DIR/.lesshst"
 export LESS="-R"
 
 # Increase the font size from 10 pt to 10.5 pt in QT apps.
@@ -63,3 +69,8 @@ export QT_QPA_PLATFORMTHEME=qt5ct
 
 # Set locale
 [ ! -f "$XDG_CONFIG_HOME/locale.conf" ] || . "$XDG_CONFIG_HOME/locale.conf"
+
+# fcitx5
+# export GTK_IM_MODULE=fcitx
+# export QT_IM_MODULE=fcitx
+# export XMODIFIERS=@im=fcitx
