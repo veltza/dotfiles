@@ -12,11 +12,13 @@
 #   opens a text file in an existing Neovim instance in the current tmux
 #   session. Or opens a new tmux window for Neovim and the file.
 #
-# Dependencies: file, find, grep, neovim, ps, sed, xdotool, tmux (optional)
+# Dependencies: file, find, grep, neovim, ps, sed, xargs, xdotool,
+#               tmux (optional)
 #
 # 2025-02-07 veltza: first implementation
 # 2025-03-16 veltza: fixed tmux issues
 # 2025-06-27 veltza: fixed compatibility issues with BSD systems
+# 2025-08-27 veltza: added more bashism
 
 remove_localhost() {
     printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
@@ -27,10 +29,10 @@ urldecode() {
 }
 
 find_winid_by_pid() {
-    local pid=${1:-} winid=""
-    while [ -n "$pid" ] && [ "$pid" -gt 0 ] && [ -z "$winid" ]; do
+    local pid=${1:-} winid=
+    while [[ -n $pid && $pid -gt 0 && -z $winid ]]; do
         winid=$(xdotool search --pid $pid)
-        pid=$(ps -o ppid= -p $pid | sed -e "s/[[:space:]]//g")
+        pid=$(ps -o ppid= -p $pid | xargs)
     done
     printf '%s' "$winid"
 }
@@ -39,13 +41,13 @@ open_in_terminal() {
     local IFS=$'\n' servers= server= pid= winid=
     local file=$1 cursor="call cursor($2,$3)"
     local term_exec=${TERMINAL:-st} term_earg=-e
-    read -d '' -r -a servers <<< "$(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'nvim.*' | xargs ls -t)"
+    mapfile -t servers < <(find "${XDG_RUNTIME_DIR}" -maxdepth 1 -name 'nvim.*' | xargs ls -t)
     for server in "${servers[@]}"; do
         pid=${server%.*}
         pid=${pid##*.}
         if [[ "$(ps -p "$pid" -o command 2>/dev/null | tail -n 1)" =~ (^nvim |/nvim ) ]]; then
             winid=$(find_winid_by_pid "$pid")
-            if [ -n "$winid" ]; then
+            if [[ -n $winid ]]; then
                 nvim --server "$server" --remote "${file}"
                 nvim --server "$server" --remote-send "<ESC>:$cursor<CR>zz:<ESC>"
                 xdotool windowactivate "$winid"
@@ -71,12 +73,12 @@ open_in_tmux() {
     local type= target=
     local file=$(printf '%s' "$1" | sed -e 's/ /\\ /g' -e 's/"/\\"/g' -e "s/'/\\\\'/g" -e 's/%/\\%/g')
     local cursor="call cursor($2,$3)"
-    local nvim_panes=$(tmux list-panes -s -F "#S:#I.#P #W #T #F" | grep -e " nvim" -e " Nvim" -e " NVIM")
-    if [ -n "$nvim_panes" ]; then
+    local nvim_panes=$(tmux list-panes -s -F "#S:#I.#P #W #T #F" | grep -E "( nvim| Nvim| NVIM)")
+    if [[ -n $nvim_panes ]]; then
         # Search for nvim in the current window, the previous window or other windows
         for type in ' \*$' ' -$' ''; do
-            target="$(printf '%s' "$nvim_panes" | grep "$type" | head -n 1 | cut -d ' ' -f1)"
-            if [ -n "$target" ]; then
+            target="$(printf '%s' "$nvim_panes" | grep -e "$type" | head -n 1 | cut -d ' ' -f1)"
+            if [[ -n $target ]]; then
                 tmux send-keys -t "$target" 'Escape' &&
                 tmux send-keys -t "$target" -l ":e ${file}" &&
                 tmux send-keys -t "$target" 'Enter' &&
@@ -99,27 +101,28 @@ open_with_nvim() {
         file=${file%:$col}
         row=${file##*:}
         file=${file%:$row}
-        [ "$file" = "$row" ] && row=$col && col=1
-        [ "$file" = "$row" ] && row=1 && col=1
-        [ -n "$row" ] && [ "$row" -gt 0 ] || { row=1; col=1; }
+        [[ $file == $row ]] && row=$col && col=1
+        [[ $file == $row ]] && row=1 && col=1
+        [[ -n $row && $row -gt 0 ]] || row=1
+        [[ -n $col && $col -gt 0 ]] || col=1
     elif [[ $file =~ ^file:/// ]]; then
         file=${file#file://}
     elif [[ $file =~ ^file:/[^/] ]]; then
         file=${file#file:}
-    elif [ -e "$file" ]; then
+    elif [[ -e $file ]]; then
         file=$(readlink -f "$file")
         decode=false
     else
         return 1
     fi
 
-    [ "$decode" = true ] && file=$(urldecode "$file")
-    [ -z "$file" ] || [ ! -e "$file" ] && exit
+    [[ $decode == true ]] && file=$(urldecode "$file")
+    [[ -z $file ]] || [[ ! -e $file ]] && exit
 
     case "$(file -b --mime-type "$file")" in
-        inode/directory) [ "$(basename "$0")" = tmux-open ] || return 1 ;;
+        inode/directory) [[ $(basename "$0") == tmux-open ]] || return 1 ;;
         application/x-shellscript|text/*) ;;
-        *) [ "$vscode" = true ] && exit || return 1 ;;
+        *) [[ $vscode == true ]] && exit || return 1 ;;
     esac
 
     case "$(basename "$0")" in
@@ -129,20 +132,21 @@ open_with_nvim() {
     return 0
 }
 
-xdg_open_bin=/usr/bin/xdg-open
-[ ! -x "$xdg_open_bin" ] && xdg_open_bin=/usr/local/bin/xdg-open
+for xdg_open_bin in /bin/xdg-open /usr/bin/xdg-open /usr/local/bin/xdg-open; do
+    [[ -x $xdg_open_bin ]] && break
+done
 
 case "${1:-}" in
     --help|--manual|--version)
         exec $xdg_open_bin "$@"
         ;;
     "")
-        [ "$(basename "$0")" = tmux-open ] && exit
+        [[ $(basename "$0") == tmux-open ]] && exit
         exec $xdg_open_bin "$@"
         ;;
 esac
 
-[ "${1:-}" = "--" ] && shift
+[[ ${1:-} == "--" ]] && shift
 
 file=$(remove_localhost "$1")
 open_with_nvim "$file" && exit
