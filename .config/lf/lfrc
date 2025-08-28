@@ -29,11 +29,12 @@ set icons
 set ignorecase
 set preview
 set previewer ~/.config/lf/preview
-set sixel
 set scrolloff 4
 set tagfmt "\033[33m%s\033[0m"
 set cursorpreviewfmt "\033[7;90;40m"
 set preserve "mode:timestamps"
+set filtermethod regex
+set searchmethod regex
 set user_sudo sudo
 set user_setsid setsid
 
@@ -314,7 +315,7 @@ cmd trash ${{
 }}
 
 cmd trash_put &{{
-    set -f
+    [ -z "$fx" ] && { lf -remote "send $id echoerr trash: no file selected"; exit; }
     n=$(printf '%s\n' "$fx" | wc -l | xargs)
     if [ $n -eq 1 ]; then
         fx=$(printf '%s' "$fx" | sed -e "s/ /<space>/g")
@@ -337,9 +338,11 @@ cmd trash_restore ${{
 }}
 
 cmd fzf_jump ${{
+    set +e;
     target="$(fzf-ctrl-t | fzf --reverse --header="Jump to location")"
     [ -z "$target" ] && exit 0
     [ -d "$target" ] && cmd="cd" || cmd="select"
+    set -e
     target=$(printf '%s' "$target" | sed 's/\\/\\\\/g;s/"/\\"/g')
     lf -remote "send $id $cmd \"$target\""
 }}
@@ -408,6 +411,7 @@ cmd sha512 checksum sha512sum
 cmd sha512sum sha512
 
 cmd unarchive-to &{{
+    [ -z "$fx" ] && { lf -remote "send $id echoerr unarchive: no file selected"; exit; }
     set -f
     f=$(printf '%s' "$fx" | head -n 1)
     [ -d "$f" ] && exit 0
@@ -432,6 +436,7 @@ cmd unarchive-to &{{
 }}
 
 cmd unarchive-here &{{
+    [ -z "$fx" ] && { lf -remote "send $id echoerr unarchive: no file selected"; exit; }
     set -f
     f=$(printf '%s' "$fx" | head -n 1)
     [ -d "$f" ] && exit 0
@@ -535,6 +540,7 @@ cmd unarchive ${{
 }}
 
 cmd compress ${{
+    [ -z "$fx" ] && { lf -remote "send $id echoerr compress: no file selected"; exit; }
     set -f
     verbose='v' # v or empty
 
@@ -842,6 +848,7 @@ nmap D trash_put
 nmap <a-d> trash_restore
 vmap d :visual-accept; cut
 map <enter> open
+map <a-f> filter
 map i $set -f; LESSOPEN='| ~/.config/lf/preview %s 0 0 0 0 verbose' less -R $f
 # map i $set -f; ~/.config/lf/preview $f 0 0 0 0 verbose | less -R
 map <a-m> mark-save
@@ -931,11 +938,11 @@ map gtr cd ~/.local/share/Trash/files
 # Startup procedure #
 #####################
 
-# Wait until the lf server is up and running. And then set the keybinding to
-# zoxide (if present) and hide the icons when using TTY or SSH.
+# Wait until the lf server is up and running, and then set some settings
+# depending on the environment.
 ${{
     icons="icons" && [ -z "${DISPLAY:-}" ] && [ -z "${SSH_CONNECTION:-}" ] && icons="noicons" # no icons on tty
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
         [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
     done
     command -v zoxide >/dev/null && lf -remote "send $id map cd push :z<space>"
