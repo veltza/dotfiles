@@ -19,6 +19,7 @@
 # 2025-03-16 veltza: fixed tmux issues
 # 2025-06-27 veltza: fixed compatibility issues with BSD systems
 # 2025-08-27 veltza: added more bashism
+# 2025-09-14 veltza: improved detection of text files
 
 remove_localhost() {
     printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
@@ -120,9 +121,20 @@ open_with_nvim() {
     [[ -z $file ]] || [[ ! -e $file ]] && exit
 
     case "$(file -b --mime-type "$file")" in
-        inode/directory) [[ $(basename "$0") == tmux-open ]] || return 1 ;;
-        application/x-shellscript|text/*) ;;
-        *) [[ $vscode == true ]] && exit || return 1 ;;
+        inode/directory)
+            [[ $(basename "$0") != tmux-open ]] && exec $xdg_open_bin "$file"
+            ;;
+        application/javascript|application/json|application/*xml)
+            ;;
+        application/x-shellscript|text/*)
+            ;;
+        *)
+            case "$file" in
+                *.c|*.cc|*.cfg|*.conf|*.cpp|*.css|*.go|*.h|*.htm|*.html) ;;
+                *.ini|*.log|*.lua|*.js|*.json|*.md|*.mjs|*.ps1|*.py|*.rs) ;;
+                *.rst|*.sh|*.toml|*.ts|*.txt|*.vim|*.xml|*.yaml|*.yml|*.zig) ;;
+                *) [[ $vscode == true ]] && exit || return 1 ;;
+            esac ;;
     esac
 
     case "$(basename "$0")" in
