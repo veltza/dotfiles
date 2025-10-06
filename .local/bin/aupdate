@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 sudo apt update && {
     hold=$(sudo apt-mark showhold | awk '{ print $0"/" }')
@@ -14,11 +14,10 @@ sudo apt update && {
         count=$(echo "$pkgs" | awk '!/\(Hold\)/ { n++ } END { printf "%d", n }')
         if [ $count -gt 0 ]; then
             printf 'Proceed with upgrade? [Y/n] '
-            [ "${1:-}" = '-y' ] && { ans='y'; printf 'y'; } || read -r -n1 ans
-            [ -n "$ans" ] && printf '\n'
-            if [[ "$ans" == "" || "$ans" =~ [yY] ]]; then
-                sudo apt upgrade -y
-            fi
+            [ "${1:-}" = '-y' ] && { echo y; ans=y; y=-y; } || read -r ans
+            case "$ans" in
+                y|Y|'') sudo apt upgrade ${y:-} ;;
+            esac
         fi
     fi
 }
