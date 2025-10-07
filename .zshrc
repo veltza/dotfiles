@@ -22,6 +22,9 @@ setopt histignorealldups sharehistory histignorespace
 DIRSTACKSIZE=10
 setopt autopushd pushdsilent pushdignoredups pushdminus
 
+# Allow comments in interactive shells (like Bash does)
+setopt interactive_comments
+
 # Don't remove a space before the pipe symbol
 ZLE_REMOVE_SUFFIX_CHARS=$' \t\n;&)'
 
@@ -106,7 +109,7 @@ command -v fzf-alt-c &> /dev/null && export FZF_ALT_C_COMMAND="fzf-alt-c"
 command -v fzf-ctrl-t &> /dev/null && export FZF_CTRL_T_COMMAND="fzf-ctrl-t"
 
 # Plugins
-typeset -gA ZSH_HIGHLIGHT_STYLES
+typeset -gA ZSH_HIGHLIGHT_STYLES=(comment 'fg=none')
 source "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 source "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh"
 bindkey "$terminfo[kcuu1]" history-substring-search-up
