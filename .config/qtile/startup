@@ -19,6 +19,8 @@ set-firefox-titlebar off &
 sxhkd &
 udiskie &
 lf -server &
+
+export SLOCK_CONFIG_PATH=slock-qtile.cfg
 qtile-lock start &
 
 shutdown_cmd="${XDG_RUNTIME_DIR:-/tmp}/qtile-shutdown-cmd"

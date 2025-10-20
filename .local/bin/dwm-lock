@@ -11,11 +11,6 @@ fade_step_time=0.05 # Time to sleep (in seconds) between fading decrements
 restore_brightness="colortemp" # Function or script to restore the screen brightness, e.g. "set_brightness 100"
 #target_screen=eDP  # Dimmable screen (autodetected if it is empty or unset)
 
-case "$(basename "$0")" in
-    qtile-lock) slockbin="slock-qtile" ;;
-             *) slockbin="slock" ;;
-esac
-
 detect_target_screen() {
     # Ref. https://superuser.com/a/1238384
     # Note: This function is not fully tested yet!
@@ -57,7 +52,7 @@ dim() {
 case "${1:-}" in
     start)
         xset s $timeout_dim $timeout_lock
-        pidof xss-lock > /dev/null || { xss-lock -n 'dwm-lock dim' -- $slockbin & }
+        pidof xss-lock > /dev/null || { xss-lock -n 'dwm-lock dim' -- slock & }
         pidof xssproxy > /dev/null || { xssproxy & }
         ;;
     stop)
