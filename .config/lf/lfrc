@@ -37,6 +37,7 @@ set filtermethod regex
 set searchmethod regex
 set user_sudo sudo
 set user_setsid setsid
+set user_sixel 0
 
 # Directory settings
 set nohidden
@@ -339,12 +340,17 @@ cmd trash_restore ${{
 
 cmd fzf_jump ${{
     set +e;
-    target="$(fzf-ctrl-t | fzf --reverse --header="Jump to location")"
+    findcmd=fzf-ctrl-t
+    if ! command -v $findcmd >/dev/null; then
+        prune="-path '*/.git' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc'"
+        findcmd="command find -L . -mindepth 1 \\( $prune \\) -prune -o -print 2>/dev/null | cut -b3-"
+    fi
+    eval "target=\$($findcmd | fzf --reverse --header=\"Jump to location\")"
     [ -z "$target" ] && exit 0
-    [ -d "$target" ] && cmd="cd" || cmd="select"
+    [ -d "$target" ] && lfcmd="cd" || lfcmd="select"
     set -e
     target=$(printf '%s' "$target" | sed 's/\\/\\\\/g;s/"/\\"/g')
-    lf -remote "send $id $cmd \"$target\""
+    lf -remote "send $id $lfcmd \"$target\""
 }}
 
 cmd sudoedit ${{
@@ -819,6 +825,19 @@ cmd ls !{{
     $lscmd --color=auto --group-directories-first -alFh
 }}
 
+cmd reloadcmd %{{
+    case "$TERM" in
+        contour|foot|st|st-*)
+            sixel=1 ;;
+        tmux-*)
+            case "$(tmux display -p '#{client_termfeatures}')" in
+                *sixel*) sixel=$(tmux display -p '#{sixel_support}') ;;
+            esac ;;
+        *)  [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
+    esac
+    lf -remote "send $id :set user_sixel ${sixel:-0}; reload"
+}}
+
 cmd sudolf $$lf_user_sudo -E lf
 cmd sudorm $$lf_user_sudo rm -r -i -- $fx
 cmd q quitcmd
@@ -862,7 +881,7 @@ nmap o push :open-with<space>
 nmap O push :open-with<space>pkexec<space>
 nmap P link
 map q quitcmd
-map <c-r> :on-cd; reload
+map <c-r> :on-cd; reloadcmd
 nmap R delete
 map T tag-toggle
 nmap U unselect
@@ -941,13 +960,24 @@ map gtr cd ~/.local/share/Trash/files
 # Wait until the lf server is up and running, and then set some settings
 # depending on the environment.
 ${{
-    icons="icons" && [ -z "${DISPLAY:-}" ] && [ -z "${SSH_CONNECTION:-}" ] && icons="noicons" # no icons on tty
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
-        [ -z "$(lf -remote "send $id set $icons" 2>&1)" ] && break || sleep 0.2
+    cmd="set icons" && [ -z "${DISPLAY:-}" ] && [ -z "${SSH_CONNECTION:-}" ] && cmd="set noicons" # no icons on tty
+    case "$TERM" in
+        contour|foot|st|st-*)
+            sixel=1 ;;
+        tmux-*)
+            case "$(tmux display -p '#{client_termfeatures}')" in
+                *sixel*) sixel=$(tmux display -p '#{sixel_support}') ;;
+            esac ;;
+        *)  [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
+    esac
+    [ "${sixel:-}" = 1 ] && cmd="$cmd; set user_sixel 1"
+    cmd="$cmd; set preload; reload"
+    command -v zoxide >/dev/null && cmd="$cmd; map cd push :z<space>"
+    command -v doas >/dev/null && cmd="$cmd; set user_sudo doas"
+    ! command -v setsid >/dev/null && cmd="$cmd; set user_setsid env"
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+        [ -z "$(lf -remote "send $id :$cmd" 2>&1)" ] && break || sleep 0.25
     done
-    command -v zoxide >/dev/null && lf -remote "send $id map cd push :z<space>"
-    command -v doas >/dev/null && lf -remote "send $id set user_sudo doas"
-    ! command -v setsid >/dev/null && lf -remote "send $id set user_setsid env" || true
 }}
 
 # Update the prompt (git branch etc.)

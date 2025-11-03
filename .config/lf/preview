@@ -17,15 +17,14 @@ preview_image() {
         preview_mediainfo "$1"
         return
     fi
-    if [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
-        w=$(($2-3))
+    if [ "${lf_user_sixel:-}" != 1 ] || [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ] || [ -z "$DISPLAY" ]; then
         opts="-f symbols --animate false --polite on"
     else
-        w=$2 && [ $w -gt 70 ] && w=70
         opts="-f sixels --animate false --polite on -t 1 --bg black --dither ordered --dither-intensity 0.85"
     fi
+    w=$2 && [ $w -gt 70 ] && w=70
     case "$f" in
-        *.bmp|*.six)
+        *.bmp|*.six|*.otf|*.ttc|*.ttf)
             magick "$1" jpg:- | chafa -s "${w}x${3}" $opts ;;
         *)
             chafa --view-size "${w}x${3}" $opts "$1" ;;
@@ -70,12 +69,13 @@ preview_appimage() {
 }
 
 batorcat() {
+    exists bat || { cat -- "$1"; return; }
     [ -n "$verbose" ] && w='auto' || w='never'
-    exists bat && { bat -pp -f --wrap=$w -- "$1"; true; } || cat -- "$1"
+    bat -pp -f --wrap=$w ${2:+--theme "$2"} -- "$1"
 }
 
 case "$f" in
-    *.avif|*.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.tiff|*.webp)
+    *.avif|*.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.otf|*.ttc|*.ttf|*.tiff|*.webp)
         preview_image "$1" "$2" "$3" "$4" "$5" ;;
     *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
         preview_mediainfo "$1" ;;
@@ -96,7 +96,8 @@ case "$f" in
     *.o)
         nm "$1" ;;
     *.md)
-        exists glow && glow -s dark "$1" || batorcat "$1" ;;
+        #exists glow && glow -s dark "$1" || batorcat "$1" ;;
+        batorcat "$1" "Coldark-Dark" ;;
     *.7z|*.deb|*.iso|*.jar|*.rar|*.tar|*.tar.??|*.tar.???|*.tbz|*.tbz2|*.tgz|*.txz|*.tzst|*.zip)
         LC_TIME=en_US.UTF-8 bsdtar -t${verbose}f "$1" ;;
     *.gz)
