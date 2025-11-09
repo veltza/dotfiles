@@ -1,14 +1,20 @@
 #!/bin/sh
 
-if [ $# -le 0 ]; then
-    echo "Usage: $(basename $0) IMAGE"
+if [ $# -le 0 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "Usage: $(basename "$0") IMAGE..."
     exit 0
 fi
 
-o=$(exiftool -Orientation -b "$1")
-if [ -n "$o" ]; then
-    exiftool -all= -Orientation=$o -n "$1"
-else
-    exiftool -all= "$1"
-fi
-
+for f in "$@"; do
+    if [ ! -f "$f" ]; then
+        echo "'$f' is not a file"
+        continue
+    fi
+    echo "$f"
+    o=$(exiftool -Orientation -b "$f")
+    if [ -n "$o" ]; then
+        exiftool -all= -Orientation=$o -n "$f"
+    else
+        exiftool -all= "$f"
+    fi
+done
