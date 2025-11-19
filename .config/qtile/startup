@@ -13,7 +13,7 @@ tearfree
 picom &
 dunst &
 setbg &
-easyeffects --gapplication-service &
+easyeffects --service-mode --hide-window &
 set-chromium-frame off &
 set-firefox-titlebar off &
 sxhkd &

@@ -4,6 +4,7 @@ case $# in
     1)
         case $1 in
             quit|poweroff|reboot)
+                killall -q easyeffects && sleep 0.1
                 echo "$1" > "${XDG_RUNTIME_DIR:-/tmp}/qtile-shutdown-cmd"
                 exec qtile cmd-obj -o cmd -f shutdown
                 ;;
