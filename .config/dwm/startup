@@ -27,7 +27,7 @@ while [ ${exitcode:-100} -eq 100 ]; do
     dwm; exitcode=$?
 done
 
-setbg --clear
+setbg --solid "#000000"
 dwm-lock stop
 killall -q xsettingsd polkit-gnome-authentication-agent-1
 killall -q picom dunst dsblocks pactl easyeffects udiskie

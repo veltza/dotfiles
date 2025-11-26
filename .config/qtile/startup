@@ -29,7 +29,7 @@ while [ ! -e "$shutdown_cmd" ]; do
     qtile start
 done
 
-setbg --clear
+setbg --solid "#000000"
 qtile-lock stop
 killall -q xsettingsd polkit-gnome-authentication-agent-1
 killall -q picom dunst dsblocks pactl easyeffects sxhkd udiskie
