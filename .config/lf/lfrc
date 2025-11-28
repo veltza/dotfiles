@@ -51,6 +51,8 @@ setlocal /run/media/ hidden
 setlocal /run/user/ hidden
 setlocal ~/.local/share/Trash/ hidden
 setlocal ~/tmp/ hidden
+setlocal ~/Downloads sortby btime
+setlocal ~/Downloads reverse
 setlocal ~/Pictures/Wallpapers/ sortby name
 
 # Shell settings
@@ -830,10 +832,11 @@ cmd reloadcmd %{{
         contour|foot|st|st-*)
             sixel=1 ;;
         tmux-*)
-            case "$(tmux display -p '#{client_termfeatures}')" in
-                *sixel*) sixel=$(tmux display -p '#{sixel_support}') ;;
+            case "$(tmux display -p '#{sixel_support},#{client_termfeatures}')" in
+                1,*sixel*) sixel=1 ;;
             esac ;;
-        *)  [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
+        *)
+            [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
     esac
     lf -remote "send $id :set user_sixel ${sixel:-0}; reload"
 }}
@@ -965,10 +968,11 @@ ${{
         contour|foot|st|st-*)
             sixel=1 ;;
         tmux-*)
-            case "$(tmux display -p '#{client_termfeatures}')" in
-                *sixel*) sixel=$(tmux display -p '#{sixel_support}') ;;
+            case "$(tmux display -p '#{sixel_support},#{client_termfeatures}')" in
+                1,*sixel*) sixel=1 ;;
             esac ;;
-        *)  [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
+        *)
+            [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
     esac
     [ "${sixel:-}" = 1 ] && cmd="$cmd; set user_sixel 1"
     cmd="$cmd; set preload; reload"
