@@ -20,6 +20,7 @@
 # 2025-06-27 veltza: fixed compatibility issues with BSD systems
 # 2025-08-27 veltza: added more bashism
 # 2025-09-14 veltza: improved detection of text files
+# 2025-12-08 veltza: improved detection of text files
 
 remove_localhost() {
     printf '%s' "${1:-}" | sed -E "s#file://($HOSTNAME|localhost)/#file:///#"
@@ -129,10 +130,12 @@ open_with_nvim() {
         application/x-shellscript|text/*)
             ;;
         *)
-            case "$file" in
-                *.c|*.cc|*.cfg|*.conf|*.cpp|*.css|*.go|*.h|*.htm|*.html) ;;
-                *.ini|*.log|*.lua|*.js|*.json|*.md|*.mjs|*.ps1|*.py|*.rs) ;;
-                *.rst|*.sh|*.toml|*.ts|*.txt|*.vim|*.xml|*.yaml|*.yml|*.zig) ;;
+            case "${file,,}" in
+                *.ans|*.asc|*.bash|*.c|*.cc|*.cfg|*.conf|*.cpp|*.css|*.csv) ;;
+                *.fish|*.go|*.h|*.htm|*.html|*.ini|*.log|*.lua|*.java|*.js) ;;
+                *.json|*.md|*.mjs|*.ps1|*.py|*.rs|*.rst|*.rtf|*.scm|*.sh) ;;
+                *.sql|*.tex|*.text|*.toml|*.ts|*.txt|*.vim|*.xml|*.yaml) ;;
+                *.yml|*.zig|*.zsh) ;;
                 *) [[ $vscode == true ]] && exit || return 1 ;;
             esac ;;
     esac
