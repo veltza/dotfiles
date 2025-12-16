@@ -70,7 +70,7 @@ case "${1:-}" in
         if pidof xss-lock > /dev/null; then
             xset s activate
         else
-            $slockbin
+            slock
         fi
         ;;
 esac
