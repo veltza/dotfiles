@@ -40,6 +40,8 @@ if ! sudo ls >/dev/null; then
     exit 1
 fi
 
+echo "Start time: $(date +"%H:%M:%S")"
+
 # Backup root config files
 if [ -d "$HOME/.backups/root" ]; then
     echo "Backing up $HOME/.backups/root to $dest/root ..."
@@ -61,6 +63,10 @@ echo "Backing up /home to $dest/home ..."
 sudo rsync -aAXH --delete --info=progress2 \
 --exclude='/home/*/.backups/' \
 --exclude='/home/*/.cache/' \
+--exclude='/home/*/.local/share/cargo/' \
+--exclude='/home/*/.local/share/go/' \
+--exclude='/home/*/.local/share/nvim/' \
+--exclude='/home/*/.local/share/rustup/' \
 --exclude='/home/*/.local/share/Trash/' \
 --exclude='/home/*/Downloads/' \
 --exclude='/home/*/tmp/' \
@@ -80,6 +86,8 @@ echo "Wait, syncing drives..."
 sync
 echo "done"
 
+echo "End time: $(date +"%H:%M:%S")"
+
 echo "Unmounting backup drive..."
 if ! sudo umount "$backup_drive" 2>/dev/null; then
     echo "Warning: can't unmount backup drive!" >&2
@@ -88,4 +96,3 @@ fi
 
 echo "done"
 echo "It's safe to remove backup drive now."
-
