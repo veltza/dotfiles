@@ -16,26 +16,26 @@ urlencode_cwd() {
 
 # Alias for lf
 lf() {
-    rm -f "${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path"
-    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path" "$@" && cdlf
+    rm -f "${XDG_RUNTIME_DIR:-$XDG_CACHE_HOME}/lf-last-dir-path"
+    command lf -last-dir-path="${XDG_RUNTIME_DIR:-$XDG_CACHE_HOME}/lf-last-dir-path" "$@" && cdlf
     update_terminal_cwd
 }
 
 # Change working dir in shell to last dir in lf
 cdlf() {
-    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME/.cache}/lf-last-dir-path" 2>/dev/null)
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$XDG_CACHE_HOME}/lf-last-dir-path" 2>/dev/null)
     [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
 }
 
 # Alias for yazi
 y() {
-    command yazi "$@" --cwd-file="${XDG_RUNTIME_DIR:-$HOME/.cache}/yazi-cwd-file" && cdy
+    command yazi "$@" --cwd-file="${XDG_RUNTIME_DIR:-$XDG_CACHE_HOME}/yazi-cwd-file" && cdy
     update_terminal_cwd
 }
 
 # Change working dir in shell to last dir in yazi
 cdy() {
-    local dir=$(cat "${XDG_RUNTIME_DIR:-$HOME/.cache}/yazi-cwd-file" 2>/dev/null)
+    local dir=$(cat "${XDG_RUNTIME_DIR:-$XDG_CACHE_HOME}/yazi-cwd-file" 2>/dev/null)
     [ "$dir" = "$(pwd)" ] || [ -d "$dir" ] && cd "$dir"
 }
 
@@ -80,7 +80,7 @@ system-update() {
     elif command -v apt &>/dev/null; then
         sudo apt update && sudo apt upgrade
     elif command -v pkg &>/dev/null; then
-        doas pkg upgrade && doas freebsd-update fetch install
+        doas pkg upgrade && doas freebsd-update fetch install && doas pkg clean -q -y
     elif command -v pkg_add &>/dev/null; then
         doas pkg_add -u && doas syspatch
     fi

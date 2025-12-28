@@ -76,7 +76,7 @@ bindkey "^[m" copy-earlier-word  # Alt+m
 # Make sure the following completion dirs are in fpath
 fpath[(i)/usr/local/share/zsh/site-functions]=()
 fpath[(i)/usr/share/zsh/site-functions]=()
-fpath=("/usr/local/share/zsh/site-functions" "/usr/share/zsh/site-functions" $fpath)
+fpath=("${XDG_DATA_HOME:-$HOME/.local/share}/zsh/completions" "/usr/local/share/zsh/site-functions" "/usr/share/zsh/site-functions" $fpath)
 
 # Use modern completion system
 autoload -Uz compinit

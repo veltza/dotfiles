@@ -21,6 +21,7 @@ export XDG_STATE_HOME="$HOME/.local/state"
 if [ -z "$XDG_RUNTIME_DIR" ]; then
     export XDG_RUNTIME_DIR="$XDG_CACHE_HOME/runtime"
     mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+    find "$XDG_RUNTIME_DIR" -mindepth 1 -mtime +7 -delete
 fi
 
 # App paths
@@ -58,7 +59,7 @@ export LESSHISTFILE="$XDG_RUNTIME_DIR/.lesshst"
 export LESS="-iR"
 
 # Increase the font size from 10 pt to 10.5 pt in QT apps.
-export QT_FONT_DPI=98
+#export QT_FONT_DPI=98
 export QT_QPA_PLATFORMTHEME=qt5ct
 
 # Make sure we have true colors when we ssh into this machine

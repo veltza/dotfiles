@@ -54,6 +54,17 @@ if ! shopt -oq posix && [ -z "${BASH_COMPLETION_VERSINFO:-}" ]; then
     fi
 fi
 
+# Edit the current command line in $EDITOR without executing it
+__edit_without_executing() {
+    local tmpfile=$(mktemp "${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/XXXXXXXXXX.bash")
+    printf '%s\n' "$READLINE_LINE" >| "$tmpfile"
+    ${EDITOR:-nano} "$tmpfile"
+    READLINE_LINE=$(< "$tmpfile")
+    READLINE_POINT=${#READLINE_LINE}
+    rm -f "$tmpfile"
+}
+bind -m emacs -x '"\C-x\C-e":__edit_without_executing'
+
 # Aliases, dirhistory and zoxide
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases.sh"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/dirhistory.bash"
