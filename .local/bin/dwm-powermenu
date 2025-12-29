@@ -1,6 +1,7 @@
 #!/bin/dash
 
-chosen=$(printf " Cancel\n Shutdown\n Reboot\n Suspend\n Hibernation\n Logout" | dmenu "$@" -i -p "Exit:")
+chosen=$(printf " Cancel\n Shutdown\n Reboot\n Suspend\n Logout" | dmenu "$@" -i -p "Exit:")
+# chosen=$(printf " Cancel\n Shutdown\n Reboot\n Suspend\n Hibernation\n Logout" | dmenu "$@" -i -p "Exit:")
 
 case "$chosen" in
     *Shutdown) exec dwm-ctl poweroff ;;
