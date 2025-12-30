@@ -1,5 +1,5 @@
-!Xcursor.size:	24
-Xcursor.theme:	capitaine-cursors-light
+Xcursor.size:	24
+Xcursor.theme:	Qogir
 Xft.antialias:	1
 Xft.dpi:	96
 Xft.autohint:	0
@@ -13,7 +13,6 @@ xmenu.background: #222222
 xmenu.foreground: #FFFFFF
 xmenu.selbackground: #3584E4
 xmenu.selforeground: #FFFFFF
-!xmenu.border: #707070
 xmenu.border: #8C8C8C
 xmenu.separator: #CDC7C2
 
@@ -28,14 +27,15 @@ dmenu.background: #07070d
 dmenu.selforeground: #E5FBFF
 dmenu.selbackground: #4f4f4f
 
-St.font:            monospace:size=10:antialias=true:autohint=true
+St.font:            monospace:style=Medium:size=10:antialias=true:autohint=true
+St.font_italic:     monospace:style=Medium Italic:antialias=true:autohint=true
 St.font_fallback1:  JoyPixels:size=10:antialias=true:autohint=true
 St.font_fallback2:  Liberation Mono:size=10.5:antialias=true:autohint=true
 St.font_fallback3:  Noto Sans CJK JP:style=Medium:size=10:antialias=true:autohint=true
 St.font_fallback4:  Symbola Custom:size=13.5:antialias=true:autohint=true
 St.cols:            114
 St.rows:            34
-St.borderpx:        2
+St.borderpx:        3
 St.minlatency:      8.0
 St.maxlatency:      33.0
 St.alpha:           1.0
