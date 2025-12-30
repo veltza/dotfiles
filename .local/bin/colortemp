@@ -3,5 +3,6 @@
 case "${1:-}" in
     reset) redshift -l 0:0 -r -P -O 6500K >/dev/null 2>&1 ;;
     warm)  redshift -l 0:0 -r -P -O 5500K >/dev/null 2>&1 ;;
-    *)     redshift -l 0:0 -r -P -O 6000K -g 0.95 -b 0.95 >/dev/null 2>&1 ;;
+    acer)  redshift -l 0:0 -r -P -O 6000K -g 0.95 -b 0.95 >/dev/null 2>&1 ;;
+    hp|*)  redshift -l 0:0 -r -P -O 6500K -g 1:0.95:1.05 >/dev/null 2>&1 ;;
 esac
