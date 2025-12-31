@@ -1,3 +1,18 @@
+window {
+    border-radius: 0;
+}
+
+decoration {
+    border-radius: 5px;
+}
+
+/*
+tooltip {
+    border: 1px solid #404040;
+    border-radius: 5px;
+}
+*/
+
 window.xfce4-panel widget > box > button > image{
    padding: 0.2em 0.16em;  -gtk-icon-transform: scale(0.8);
 }
@@ -16,8 +31,6 @@ window#whiskermenu-window treeview>* {
 	-gtk-icon-transform: scale(0.75);
 }
 
-#wnck-pager { background: #333; color: #ccc }
-#wnck-pager:selected { background: #ff9900; color: black }
-
-wnck-pager { background: #20355c; color: #ccc }
-wnck-pager:selected { background: #0c1422; color: white }
+#xfce4-terminal-notebook vte-terminal {
+    padding: 3px;
+}
