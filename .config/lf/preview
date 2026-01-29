@@ -25,7 +25,7 @@ preview_image() {
     w=$2 && [ $w -gt 70 ] && w=70
     case "$f" in
         *.bmp|*.six|*.otf|*.ttc|*.ttf)
-            magick "$1" jpg:- | chafa -s "${w}x${3}" $opts ;;
+            magick "$1" jpg:- | chafa --view-size "${w}x${3}" $opts ;;
         *)
             chafa --view-size "${w}x${3}" $opts "$1" ;;
     esac

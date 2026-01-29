@@ -38,6 +38,7 @@ set searchmethod regex
 set user_sudo sudo
 set user_setsid setsid
 set user_sixel 0
+#set period 1
 
 # Directory settings
 set nohidden
@@ -72,8 +73,13 @@ cmd on-cd &{{
         *) title=$PWD ;;
     esac
     title=$(printf '%s' "$title" | sed 's/\\/\\\\/g;s/"/\\"/g')
-    cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
-    lf -remote "send $id tty-write \"\033]0;$title\007\033]7;file://$(hostname)$cwd\007\""
+    if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+        cwd=$(printf '%s' "$PWD" | sed 's/\\/\\\\/g;s/"/\\"/g')
+        lf -remote "send $id tty-write \"\033]0;$title\007\033]9;9;$cwd\007\""
+    elif [ -z "${WT_SESSION:-}" ]; then
+        cwd=$(printf '%s' "$PWD" | perl -lpe 's/([^A-Za-z0-9-.\/:_!\(\)~'"\'"'])/sprintf("%%%02X", ord($1))/seg')
+        lf -remote "send $id tty-write \"\033]0;$title\007\033]7;file://$(hostname)$cwd\007\""
+    fi
 
     # Show git branch in prompt
     set +e
@@ -186,7 +192,11 @@ cmd open-new-terminal &{{
     setsidcmd=$lf_user_setsid
     for e in $(env | grep "^lf_"); do eval "unset ${e%%=*}"; done
     unset f fs fx id lf LF_LEVEL
-    $setsidcmd st -d "$PWD" &
+    if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+        $setsidcmd wt -d "$PWD" &
+    elif [ -z "${WT_SESSION:-}" ]; then
+        $setsidcmd st -d "$PWD" &
+    fi
 }}
 
 # y (select for copy) and P to paste soft-link
@@ -321,7 +331,7 @@ cmd trash_put &{{
     [ -z "$fx" ] && { lf -remote "send $id echoerr trash: no file selected"; exit; }
     n=$(printf '%s\n' "$fx" | wc -l | xargs)
     if [ $n -eq 1 ]; then
-        fx=$(printf '%s' "$fx" | sed -e "s/ /<space>/g")
+        fx=$(printf '%s' "$fx" | sed -e "s/[ 	]/<space>/g" -e "s/[^[:print:]]//g")
         lf -remote "send $id push :trash<space>'$fx'<space>?<space>[y/N]<space>"
     else
         lf -remote "send $id push :trash<space>$n<space>items?<space>[y/N]<space>"
@@ -439,7 +449,7 @@ cmd unarchive-to &{{
         *)  lf -remote "send $id echoerr Unsupported format!"
             exit 0 ;;
     esac
-    f=$(printf '%s' "$f" | sed -e "s/ /<space>/g")
+    f=$(printf '%s' "$f" | sed -e "s/[ 	]/<space>/g" -e "s/[^[:print:]]//g")
     lf -remote "send $id push :unarchive<space>selected<space>file<space>into<space>directory:<space>$f"
 }}
 
@@ -836,7 +846,8 @@ cmd reloadcmd %{{
                 1,*sixel*) sixel=1 ;;
             esac ;;
         *)
-            [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
+            [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1
+            [ -n "${WT_SESSION:-}" ] || [ -n "${WSL_DISTRO_NAME:-}" ] && sixel=1 ;;
     esac
     lf -remote "send $id :set user_sixel ${sixel:-0}; reload"
 }}
@@ -972,7 +983,8 @@ ${{
                 1,*sixel*) sixel=1 ;;
             esac ;;
         *)
-            [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1 ;;
+            [ -n "${WEZTERM_EXECUTABLE:-}" ] && sixel=1
+            [ -n "${WT_SESSION:-}" ] || [ -n "${WSL_DISTRO_NAME:-}" ] && sixel=1 ;;
     esac
     [ "${sixel:-}" = 1 ] && cmd="$cmd; set user_sixel 1"
     cmd="$cmd; set preload; reload"
