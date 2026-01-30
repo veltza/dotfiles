@@ -8,6 +8,9 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
+# Set non-blinking cursor (wt)
+[ -n "${WT_SESSION:-}" ] || [ -n "${WSL_DISTRO_NAME:-}" ] && printf '\e[?12l'
+
 # Set PATH so it includes user's private binary dirs if exists
 [ -d "$HOME/Applications" ] && PATH="$HOME/Applications:$PATH"
 [ -d "$HOME/bin" ] && PATH="$HOME/bin:$PATH"
@@ -39,8 +42,9 @@ export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 export VISUAL=nvim
 export EDITOR=nvim
 export SUDO_EDITOR=nvim
-export BROWSER=chromium
 export TERMINAL=st
+export BROWSER=firefox
+command -v chromium >/dev/null && export BROWSER=chromium
 
 # Less Colors for Man Pages
 export LESS_TERMCAP_mb=$(printf '\33[01;31m')    # begin blinking

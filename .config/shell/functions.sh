@@ -1,13 +1,20 @@
 # Report the current working directory to the terminal
 update_terminal_cwd() {
+    # window title
     local title=$PWD
     case "$title" in
         $HOME) title=$USER ;;
         $HOME*) title="~${title#$HOME}" ;;
     esac
     printf "\033]0;%s\007" "$title"
-    [ -n "${WT_SESSION:-}" ] && printf "\033]9;9;%s\007" "$(cygpath -w "$PWD")"
-    [ -n "${WT_SESSION:-}" ] || printf "\033]7;file://%s%s\007" "$(hostname)" "$(urlencode_cwd)"
+    # current working directory
+    if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+        printf "\033]9;9;%s\007" "$PWD"
+    elif [ -n "${WT_SESSION:-}" ]; then
+        printf "\033]9;9;%s\007" "$(cygpath -w "$PWD")"
+    else
+        printf "\033]7;file://%s%s\007" "$(hostname)" "$(urlencode_cwd)"
+    fi
 }
 
 urlencode_cwd() {
