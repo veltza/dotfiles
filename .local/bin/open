@@ -1,0 +1,2 @@
+#!/bin/sh
+[ -n "$TMUX" ] && exec tmux-open "$@" || exec xdg-open "$@"
