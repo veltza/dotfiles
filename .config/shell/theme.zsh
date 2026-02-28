@@ -8,7 +8,7 @@ PROMPT_CONTEXT_BG=${PROMPT_CONTEXT_BG:-253}
 
 prompt_segment() {
     local fg="%{%F{$1}%}" bg="%{%K{$2}%}"
-    if [ "$CURRENT_BG" = "NONE" ]; then
+    if [[ $CURRENT_BG == "NONE" ]]; then
         print -n "${bg}${fg}${3}"
     else
         print -n "${bg}%{%F{$CURRENT_BG}%}${PROMPT_SEPARATOR}${fg}${3}"
@@ -21,7 +21,7 @@ prompt_context() {
 }
 
 prompt_virtualenv() {
-    [ -z "$VIRTUAL_ENV" ] || prompt_segment black cyan " ${VIRTUAL_ENV##*/} "
+    [[ -z $VIRTUAL_ENV ]] || prompt_segment black cyan " ${VIRTUAL_ENV##*/} "
 }
 
 prompt_dir() {
@@ -30,8 +30,8 @@ prompt_dir() {
 
 prompt_git() {
     local bg=green branch="$vcs_info_msg_0_ "
-    if [ -n "$vcs_info_msg_0_" ]; then
-        if [ -n "$(git status --porcelain --ignore-submodules -uno 2>/dev/null)" ]; then
+    if [[ -n $vcs_info_msg_0_ ]]; then
+        if [[ -n "$(git status --porcelain --ignore-submodules -uno 2>/dev/null)" ]]; then
             bg=yellow
             branch="${branch}${PROMPT_PLUSMINUS}"
         fi
@@ -54,7 +54,7 @@ prompt_main() {
 
 prompt_precmd() {
     vcs_info
-    PROMPT=$'%{\e]133;A\a%}''%{%f%b%k%}$(prompt_main)%{%f%b%k%} '
+    PROMPT=$'%{\e]133;A\a%}''%{%f%b%k%}$(prompt_main)%{%f%b%k%} '$'%{\e]133;B\a%}'
 }
 
 prompt_setup() {

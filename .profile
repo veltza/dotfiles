@@ -8,8 +8,12 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
-# Set non-blinking cursor (wt)
-[ -n "${WT_SESSION:-}" ] || [ -n "${WSL_DISTRO_NAME:-}" ] && printf '\e[?12l'
+# Windows Terminal settings
+if [ -n "${WT_SESSION:-}" ] || [ -n "${WSL_DISTRO_NAME:-}" ]; then
+    export TERMINAL=wt
+    export WT_PROFILE_NAME=$WSL_DISTRO_NAME
+    printf '\033[?12l' # set non-blinking cursor
+fi
 
 # Set PATH so it includes user's private binary dirs if exists
 [ -d "$HOME/Applications" ] && PATH="$HOME/Applications:$PATH"
@@ -42,7 +46,7 @@ export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 export VISUAL=nvim
 export EDITOR=nvim
 export SUDO_EDITOR=nvim
-export TERMINAL=st
+export TERMINAL=${TERMINAL:-st}
 export BROWSER=firefox
 command -v chromium >/dev/null && export BROWSER=chromium
 

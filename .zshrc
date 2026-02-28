@@ -25,11 +25,11 @@ setopt autopushd pushdsilent pushdignoredups pushdminus
 # Allow comments in interactive shells (like Bash does)
 setopt interactive_comments
 
-# Don't remove a space before the pipe symbol
-ZLE_REMOVE_SUFFIX_CHARS=$' \t\n;&)'
+# Don't remove a space before the pipe and the ampersand symbols
+ZLE_REMOVE_SUFFIX_CHARS=$' \t\n;)'
 
 # Set up the prompt
-if [[ $(tty) =~ tty[0-9]$ ]]; then
+if [[ $(tty) =~ tty[0-9]$ || $XDG_SESSION_TYPE == tty ]]; then
     export PROMPT_SEPARATOR=''
     export PROMPT_PLUSMINUS='+'
     export PROMPT_ELLIPSIS='...'

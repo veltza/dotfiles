@@ -32,7 +32,7 @@ shopt -s checkwinsize
 shopt -s globstar
 
 # Set up the prompt
-if [[ $(tty) =~ tty[0-9]$ ]]; then
+if [[ $(tty) =~ tty[0-9]$ || $XDG_SESSION_TYPE == tty ]]; then
     export PROMPT_SEPARATOR=''
     export PROMPT_PLUSMINUS='+'
     export PROMPT_BRANCH=''
