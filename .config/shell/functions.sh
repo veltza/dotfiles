@@ -9,9 +9,9 @@ update_terminal_cwd() {
     printf "\033]0;%s\007" "$title"
     # current working directory
     if [ -n "${WSL_DISTRO_NAME:-}" ]; then
-        printf "\033]9;9;%s\007" "$PWD"
+        printf "\033]9;9;%s\007\033[?12l" "$PWD"
     elif [ -n "${WT_SESSION:-}" ]; then
-        printf "\033]9;9;%s\007" "$(cygpath -w "$PWD")"
+        printf "\033]9;9;%s\007\033[?12l" "$(cygpath -w "$PWD")"
     else
         printf "\033]7;file://%s%s\007" "$(hostname)" "$(urlencode_cwd)"
     fi
