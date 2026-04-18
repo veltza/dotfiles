@@ -7,9 +7,20 @@ is_img_extension() {
     grep -iE '\.(jpe?g|png|gif|svg|jxl|webp|tiff|heif|avif|ico|bmp|pam|pbm|ppm|tga|qoi|ff)$'
 }
 
+# cross-platform natural sort
+natural_sort() {
+    python3 -c '
+import sys, re
+split = re.compile(r"(\d+)").split
+lines = sys.stdin.read().splitlines()
+lines.sort(key=lambda s: [int(p) if i & 1 else p.casefold() for i, p in enumerate(split(s))])
+print("\n".join(lines))
+'
+}
+
 listfiles() {
     find -L "$1" -maxdepth 1 -type f -print |
-        is_img_extension | sort | tee "$tmp"
+        is_img_extension | natural_sort | tee "$tmp"
 }
 
 open_img() {
