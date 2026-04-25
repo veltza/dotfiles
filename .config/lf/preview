@@ -24,7 +24,7 @@ preview_image() {
     fi
     w=$2 && [ $w -gt 70 ] && w=70
     case "$f" in
-        *.bmp|*.six|*.otf|*.ttc|*.ttf)
+        *.bmp|*.six|*.otf|*.ttc|*.ttf|*.TTF)
             magick "$1" jpg:- | chafa --view-size "${w}x${3}" $opts ;;
         *)
             chafa --view-size "${w}x${3}" $opts "$1" ;;
@@ -68,6 +68,24 @@ preview_appimage() {
     [ -n "$files" ] && echo "$files" || return 1
 }
 
+manpage() {
+    if exists groff; then
+        if [ -n "$verbose" ]; then
+            groff -mandoc -Tutf8 -k -t -rLL=$(tput cols)n -P-c "$1" 2>/dev/null
+        else
+            ESC=$(printf "\033")
+            groff -mandoc -Tutf8 -k -t -rLL=${2}n -rU=0 "$1" 2>/dev/null | \
+	    sed -E -e "s/$ESC\[(22|24|34)m/$ESC[0m/g" \
+                -e "s/$ESC\[4m$ESC\[0m/$ESC[0m$ESC[4m/g" \
+                -e "s/$ESC\[1m/${LESS_TERMCAP_md:-$ESC[1m}/g" \
+                -e "s/$ESC\[4m/${LESS_TERMCAP_us:-$ESC[4m}/g" \
+                -e "s/.//g"
+        fi
+    else
+        man "$1" | col -b
+    fi
+}
+
 batorcat() {
     exists bat || { cat -- "$1"; return; }
     [ -n "$verbose" ] && w='auto' || w='never'
@@ -75,7 +93,7 @@ batorcat() {
 }
 
 case "$f" in
-    *.avif|*.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.otf|*.ttc|*.ttf|*.tiff|*.webp)
+    *.avif|*.bmp|*.gif|*.jpg|*.jpeg|*.png|*.six|*.svg|*.otf|*.ttc|*.ttf|*.TTF|*.tiff|*.webp)
         preview_image "$1" "$2" "$3" "$4" "$5" ;;
     *.avi|*.m4v|*.mkv|*.mp3|*.mp4)
         preview_mediainfo "$1" ;;
@@ -92,7 +110,7 @@ case "$f" in
     *.xlsx|*.xlsm)
         xlsx2csv "$1" ;;
     *.[1-8])
-        man "$1" | col -b ;;
+        manpage "$1" "$2" ;;
     *.o)
         nm "$1" ;;
     *.md)

@@ -14,7 +14,7 @@
 # unxz (xz), unzstd (zstd), xlsx2csv (https://github.com/dilshod/xlsx2csv)
 #
 # Optional tools for previewer:
-# bat, chafa, glow (https://github.com/charmbracelet/glow), imagemagick,
+# bat, chafa, glow (https://github.com/charmbracelet/glow), groff, imagemagick,
 # transmission-show
 ###############################################################################
 
@@ -894,8 +894,8 @@ nmap <a-d> trash_restore
 vmap d :visual-accept; cut
 map <enter> open
 map <a-f> filter
-map i $set -f; LESSOPEN='| ~/.config/lf/preview %s 0 0 0 0 verbose' less -R $f
-# map i $set -f; ~/.config/lf/preview $f 0 0 0 0 verbose | less -R
+map i $[ -z "$f" ] || LESSOPEN='| $lf_previewer %s 0 0 0 0 verbose' less -R "$f"
+# map i $[ -z "$f" ] || $lf_previewer "$f" 0 0 0 0 verbose | less -R
 map <a-m> mark-save
 map mm mark-save
 nmap md push :mkdir<space>
