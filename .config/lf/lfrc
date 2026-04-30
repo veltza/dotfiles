@@ -970,12 +970,13 @@ map gd cd ~/Documents
 map gD cd ~/Downloads
 map gm cd ~/Music
 map gp cd ~/Pictures
-map gr cd ~/repos
+map gP cd ~/Projects
+map gr cd ~/Projects/repos
 map gv cd ~/Videos
 map gM cd-media
 map g.b cd ~/.backups
 map g.c cd ~/.config
-map g.d cd ~/repos/dwm
+map g.d cd ~/Projects/repos/dwm
 map g.l cd ~/.local
 map gtr cd ~/.local/share/Trash/files
 
