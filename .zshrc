@@ -51,9 +51,10 @@ bindkey '^[[1;5D' emacs-backward-word   # Ctrl+Left
 bindkey '\e[M' kill-word                # Ctrl+Delete
 bindkey '^[[3;5~' kill-word             # Ctrl+Delete
 bindkey '^U' backward-kill-line         # Ctrl+U
+bindkey '^[e' expand-word               # Alt+e
+bindkey '^[s' vi-find-next-char         # Alt+s
+bindkey '^[S' vi-find-prev-char         # Alt+S
 bindkey '^[W' kill-region               # Alt+W
-bindkey '\C-]' vi-find-next-char        # Ctrl+]
-bindkey '\e\C-]' vi-find-prev-char      # Alt+Ctrl+]
 bindkey '\e[3~' delete-char             # Delete
 
 backward-kill-word-ctrl-bs() {

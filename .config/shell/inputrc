@@ -4,12 +4,19 @@ set colored-stats On
 set show-all-if-ambiguous On
 set completion-ignore-case On
 TAB: menu-complete
-"\e[Z": menu-complete-backward  # Shift+Tab
-"\C-h": backward-kill-word      # Ctrl+Backspace
-"\e[M": kill-word               # Ctrl+Delete
-"\e[3;5~": kill-word            # Ctrl+Delete
-"\ew": copy-region-as-kill      # Alt+w
-"\eW": kill-region              # Alt+W
+"\e[Z": menu-complete-backward   # Shift+Tab
+"\C-h": backward-kill-word       # Ctrl+Backspace
+"\e[M": kill-word                # Ctrl+Delete
+"\e[3;5~": kill-word             # Ctrl+Delete
+"\ef": shell-forward-word        # Alt+f
+"\eb": shell-backward-word       # Alt+b
+"\ed": shell-kill-word           # Alt+d
+"\ee": shell-expand-line         # Alt+e
+"\et": shell-transpose-words     # Alt+t
+"\es": character-search          # Alt+s
+"\eS": character-search-backward # Alt+S
+"\ew": copy-region-as-kill       # Alt+w
+"\eW": kill-region               # Alt+W
 "\e[A": history-substring-search-backward
 "\e[B": history-substring-search-forward
 "\C-p": history-substring-search-backward
