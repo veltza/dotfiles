@@ -46,23 +46,44 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/theme.zsh"
 
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -e
-bindkey '^[[1;5C' emacs-forward-word    # Ctrl+Right
-bindkey '^[[1;5D' emacs-backward-word   # Ctrl+Left
-bindkey '\e[M' kill-word                # Ctrl+Delete
-bindkey '^[[3;5~' kill-word             # Ctrl+Delete
-bindkey '^U' backward-kill-line         # Ctrl+U
-bindkey '^[e' expand-word               # Alt+e
-bindkey '^[s' vi-find-next-char         # Alt+s
-bindkey '^[S' vi-find-prev-char         # Alt+S
-bindkey '^[W' kill-region               # Alt+W
-bindkey '\e[3~' delete-char             # Delete
+bindkey '^[[1;5C' vi-forward-word  # Ctrl+Right
+bindkey '^[[1;5D' vi-backward-word # Ctrl+Left
+bindkey '\e[M' kill-subword        # Ctrl+Delete
+bindkey '^[[3;5~' kill-subword     # Ctrl+Delete
+bindkey '^H' backward-kill-subword # Ctrl+Backspace
+bindkey '^U' backward-kill-line    # Ctrl+U
+bindkey '^[f' forward-word         # Alt+f
+bindkey '^[b' backward-word        # Alt+b
+bindkey '^[F' vi-forward-word      # Alt+F
+bindkey '^[B' vi-backward-word     # Alt+B
+bindkey '^[d' kill-word            # Alt+d
+bindkey '^[D' kill-subword         # Alt+D
+bindkey '^[e' expand-word          # Alt+e
+bindkey '^[s' vi-find-next-char    # Alt+s
+bindkey '^[S' vi-find-prev-char    # Alt+S
+bindkey '^[t' transpose-words      # Alt+t
+bindkey '^[T' transpose-subwords   # Alt+T
+bindkey '^[w' copy-region-as-kill  # Alt+w
+bindkey '^[W' kill-region          # Alt+W
+bindkey '\e[3~' delete-char        # Delete
 
-backward-kill-word-ctrl-bs() {
-    local WORDCHARS=${WORDCHARS/\/}
+kill-subword() {
+    local WORDCHARS=''
+    zle kill-word
+}
+zle -N kill-subword
+
+backward-kill-subword() {
+    local WORDCHARS=''
     zle backward-kill-word
 }
-zle -N backward-kill-word-ctrl-bs
-bindkey '^H' backward-kill-word-ctrl-bs # Ctrl+Backspace
+zle -N backward-kill-subword
+
+transpose-subwords() {
+    local WORDCHARS=''
+    zle transpose-words
+}
+zle -N transpose-subwords
 
 # Edit the current command line in $EDITOR
 autoload -U edit-command-line

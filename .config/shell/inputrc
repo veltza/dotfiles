@@ -10,9 +10,13 @@ TAB: menu-complete
 "\e[3;5~": kill-word             # Ctrl+Delete
 "\ef": shell-forward-word        # Alt+f
 "\eb": shell-backward-word       # Alt+b
+"\eF": forward-word              # Alt+F
+"\eB": backward-word             # Alt+B
 "\ed": shell-kill-word           # Alt+d
+"\eD": kill-word                 # Alt+D
 "\ee": shell-expand-line         # Alt+e
 "\et": shell-transpose-words     # Alt+t
+"\eT": transpose-words           # Alt+T
 "\es": character-search          # Alt+s
 "\eS": character-search-backward # Alt+S
 "\ew": copy-region-as-kill       # Alt+w
