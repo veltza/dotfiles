@@ -22,6 +22,7 @@ alias 8='cd -8'
 alias 9='cd -9'
 alias cp='cp -i'
 alias df='df -h'
+alias du='du -h'
 alias d='dirs -v'
 if diff --color=always /dev/null /dev/null &>/dev/null; then
     if diff --palette="" /dev/null /dev/null &>/dev/null; then

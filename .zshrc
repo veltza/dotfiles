@@ -66,6 +66,7 @@ bindkey '^[T' transpose-subwords   # Alt+T
 bindkey '^[w' copy-region-as-kill  # Alt+w
 bindkey '^[W' kill-region          # Alt+W
 bindkey '\e[3~' delete-char        # Delete
+bindkey -r "^['"                   # Remove Alt+'
 
 kill-subword() {
     local WORDCHARS=''
