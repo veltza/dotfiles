@@ -1,7 +1,7 @@
 ###############################################################################
 # Required tools for lf:
-# bsdtar (libarchive), gnu coreutils, dash, gunzip (gzip), trash-cli, unrar,
-# unxz (xz), unzip, unzstd (zstd), vidir (moreutils)
+# bsdtar (libarchive), gnu coreutils, dash, gunzip (gzip), trash-cli or gio,
+# unrar, unxz (xz), unzip, unzstd (zstd), vidir (moreutils)
 #
 # Optional tools for lf:
 # curl, dragon-drop (https://github.com/mwh/dragon),
@@ -323,8 +323,14 @@ cmd trash ${{
     [ $# -le 0 ] && ans="n" || eval ans=\${$#}
     ans=${ans#"${ans%?}"}
     if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
-        trash-put -- $fx
-        #lf -remote "send clear"
+        if command -v trash-put >/dev/null; then
+            trash-put -- $fx
+        elif command -v gio >/dev/null; then
+            gio trash -- $fx
+        else
+            lf -remote "send $id echoerr trash-cli or gio is not installed"
+            exit 0
+        fi
         lf -remote "send reload"
         lf -remote "send $id echo Done"
     fi
@@ -343,7 +349,11 @@ cmd trash_put &{{
 
 cmd trash_restore ${{
     set -f
-    if [ $(trash-list | grep -F $PWD | wc -l) -gt 0 ] && [ "$PWD" != "/" ]; then
+    if ! command -v trash-restore >/dev/null; then
+        lf -remote "send $id echoerr trash-restore: trash-cli is not installed"
+        exit 0
+    fi
+    if [ "$PWD" != "/" ] && [ $(trash-list | grep -F "$PWD/" | wc -l) -gt 0 ]; then
         echo "Trash restore"
         trash-restore
         lf -remote "send reload"
