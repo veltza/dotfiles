@@ -1,0 +1,27 @@
+#!/bin/sh
+# Wrapper script for ncdu --delete-command that safely moves selected files and
+# directories to the system trash instead of permanently deleting them.
+
+if ! command -v ncdu >/dev/null; then
+    echo "$(basename "$0"): ncdu is not installed" >&2
+    exit 1
+fi
+
+version=$(ncdu --version | grep -Eo '[0-9]+(\.[0-9]+)+' | head -n 1)
+case "$version" in
+    0.*|1.*|2.[0-8]|2.[0-8].*)
+        echo "$(basename "$0"): ncdu 2.9 or newer is required (found: $(ncdu --version))" >&2
+        exit 1
+        ;;
+esac
+
+for trashcmd in 'gio trash --' 'trash-put --' ''; do
+    command -v "${trashcmd%% *}" >/dev/null && break
+done
+
+if [ -z "$trashcmd" ]; then
+    echo "$(basename "$0"): gio or trash-cli is not installed" >&2
+    exit 1
+fi
+
+exec ncdu --delete-command "$trashcmd" "$@"
