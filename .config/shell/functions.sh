@@ -9,7 +9,7 @@ update_terminal_cwd() {
     printf "\033]0;%s\007" "$title"
     # current working directory
     if [ -n "${WSL_DISTRO_NAME:-}" ]; then
-        printf "\033]9;9;%s\007\033[?12l" "$PWD"
+        printf "\033]9;9;%s\007\033[?12l" "$(wslpath -w "$PWD")"
     elif [ -n "${WT_SESSION:-}" ]; then
         printf "\033]9;9;%s\007\033[?12l" "$(cygpath -w "$PWD")"
     else
@@ -67,7 +67,7 @@ delta-toggle() {
 
 # Run the system update in a tmux session
 update() {
-    if [ -n "${TMUX:-}" ] || [ "$(uname -o 2>/dev/null)" = 'Msys' ]; then
+    if [ -n "${TMUX:-}" ] || [ -n "${MSYSTEM:-}" ]; then
         system-update
     elif tmux has-session -t 'Update' 2> /dev/null; then
         tmux attach-session -t 'Update' \; new-window \; send-keys "system-update" C-m
@@ -78,7 +78,9 @@ update() {
 }
 
 system-update() {
-    if command -v yay &>/dev/null; then
+    if [ -n "${MSYSTEM:-}" ]; then
+        pacman -Syu
+    elif command -v yay &>/dev/null; then
         yay -Pw 2>/dev/null; yay
     elif command -v pacman &>/dev/null; then
         sudo pacman -Syu

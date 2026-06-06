@@ -11,6 +11,7 @@
 # Windows Terminal settings
 if [ -n "${WT_SESSION:-}" ] || [ -n "${WSL_DISTRO_NAME:-}" ]; then
     export TERMINAL=wt
+    export COLORTERM=truecolor
     export WT_PROFILE_NAME=$WSL_DISTRO_NAME
     printf '\033[?12l' # set non-blinking cursor
 fi
@@ -25,9 +26,9 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
-if [ -z "$XDG_RUNTIME_DIR" ]; then
+if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
     export XDG_RUNTIME_DIR="$XDG_CACHE_HOME/runtime"
-    mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+    mkdir -p $([ -n "${MSYSTEM:-}" ] || echo '-m 700') "$XDG_RUNTIME_DIR"
     find "$XDG_RUNTIME_DIR" -mindepth 1 -mtime +7 -delete
 fi
 
