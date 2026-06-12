@@ -47,7 +47,7 @@ export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 export VISUAL=nvim
 export EDITOR=nvim
 export SUDO_EDITOR=nvim
-export TERMINAL=${TERMINAL:-st}
+export TERMINAL=${TERMINAL:-${TERM_PROGRAM:-st}}
 export BROWSER=firefox
 command -v chromium >/dev/null && export BROWSER=chromium
 

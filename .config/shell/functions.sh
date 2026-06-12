@@ -69,6 +69,9 @@ delta-toggle() {
 update() {
     if [ -n "${TMUX:-}" ] || [ -n "${MSYSTEM:-}" ]; then
         system-update
+    elif ! command -v tmux &>/dev/null; then
+        echo "Warning: tmux is not installed!"
+        system-update
     elif tmux has-session -t 'Update' 2> /dev/null; then
         tmux attach-session -t 'Update' \; new-window \; send-keys "system-update" C-m
     else
