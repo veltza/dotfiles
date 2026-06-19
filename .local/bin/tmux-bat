@@ -1,0 +1,49 @@
+#!/bin/dash
+# Battery status for tmux
+
+cache_dir=${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}}/tmux-bat
+output_file=$cache_dir/output
+device_file=$cache_dir/device
+chargesym=' +'
+
+if [ -f "$output_file" ]; then
+    mtime=$(stat -c %Y "$output_file" 2>/dev/null || stat -f %m "$output_file")
+    now=$(date +%s)
+    if [ $((now - mtime)) -lt 10 ]; then
+        cat "$output_file"
+        exit
+    fi
+fi
+
+[ ! -d "$cache_dir" ] && { mkdir -p "$cache_dir" || exit; }
+
+if command -v upower >/dev/null; then
+    [ -f "$device_file" ] || upower -e | grep -E 'battery|DisplayDevice' | tail -n1 > "$device_file"
+    IFS= read -r bat < "$device_file"
+    if [ -z "$bat" ]; then
+        echo > "$output_file"
+        exit
+    fi
+    upower -i "$bat" | awk -v chargesym="$chargesym" '
+        BEGIN { pct = -1; missing = 0 } 
+        /percentage:/ { pct = $2 }
+        /battery-missing-symbolic/ { missing = 1 }
+        $1 == "state:" && $2 == "charging" { charging = chargesym }
+        END { if (pct != -1 && !missing) print "| BAT: " pct charging " " }
+        ' | tee "$output_file"
+    exit
+fi
+
+for ps in /sys/class/power_supply/*/type; do
+    [ -e "$ps" ] || continue
+    IFS= read -r type < "$ps"
+    if [ "$type" = "Battery" ]; then
+        bat=${ps%/type}
+        IFS= read -r cap < "$bat/capacity"
+        IFS= read -r status < "$bat/status"
+        [ "$status" = Charging ] && charging=$chargesym
+        output="| BAT: $cap%$charging "
+    fi
+done
+
+echo "$output" | tee "$output_file"
