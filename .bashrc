@@ -31,6 +31,9 @@ shopt -s checkwinsize
 # The pattern ‘**’ matches all files and zero or more dirs and subdirs.
 shopt -s globstar
 
+# Turn on extended globbing
+shopt -s extglob
+
 # Set up the prompt
 if [[ $(tty) =~ tty[0-9]$ || $XDG_SESSION_TYPE == tty ]]; then
     export PROMPT_SEPARATOR=''

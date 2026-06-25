@@ -25,6 +25,9 @@ setopt autopushd pushdsilent pushdignoredups pushdminus
 # Allow comments in interactive shells (like Bash does)
 setopt interactive_comments
 
+# Turn on extended globbing
+setopt extendedglob
+
 # Don't remove a space before the pipe and the ampersand symbols
 ZLE_REMOVE_SUFFIX_CHARS=$' \t\n;)'
 

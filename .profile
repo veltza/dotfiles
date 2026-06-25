@@ -67,9 +67,8 @@ export LESSUTFCHARDEF=E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p
 export LESSHISTFILE="$XDG_RUNTIME_DIR/.lesshst"
 export LESS="-iR"
 
-# Increase the font size from 10 pt to 10.5 pt in QT apps.
-#export QT_FONT_DPI=98
-export QT_QPA_PLATFORMTHEME=qt5ct
+# Set the Qt platform theme for Qt apps
+export QT_QPA_PLATFORMTHEME=qt6ct
 
 # Make sure we have true colors when we ssh into this machine
 [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ] && export COLORTERM=truecolor
