@@ -68,10 +68,12 @@ __edit_without_executing() {
 }
 bind -m emacs -x '"\C-x\C-e":__edit_without_executing'
 
-# Aliases, dirhistory and zoxide
+# zoxide must be initialized before dirhistory.bash
+command -v zoxide &> /dev/null && eval "$(zoxide init bash --cmd cd)"
+
+# Aliases and dirhistory
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/aliases.sh"
 source "${XDG_CONFIG_HOME:-$HOME/.config}/shell/dirhistory.bash"
-command -v zoxide &> /dev/null && eval "$(zoxide init bash)"
 
 # Set up lf key binding
 command -v lf &> /dev/null && bind '"\C-o":"\C-u\C-klf\C-m"'
