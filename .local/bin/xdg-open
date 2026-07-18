@@ -156,12 +156,16 @@ open_with_nvim() {
         application/x-shellscript|text/*)
             ;;
         *)
+            # fallback if the file command does not properly detect a text file
             case "${file,,}" in
-                *.ans|*.asc|*.bash|*.c|*.cc|*.cfg|*.conf|*.cpp|*.css|*.csv) ;;
-                *.fish|*.go|*.h|*.htm|*.html|*.ini|*.log|*.lua|*.java|*.js) ;;
-                *.json|*.md|*.mjs|*.ps1|*.py|*.rs|*.rst|*.rtf|*.scm|*.sh) ;;
-                *.sql|*.tex|*.text|*.toml|*.ts|*.txt|*.vim|*.xml|*.yaml) ;;
-                *.yml|*.zig|*.zsh) ;;
+                *.1|*.ans|*.asc|*.asm|*.awk|*.bash|*.bat|*.c|*.cc|*.cfg) ;;
+                *.cjs|*.cmd|*.conf|*.cpp|*.csh|*.cs|*.css|*.csv|*.cxx|*.c++) ;;
+                *.dart|*.desktop|*.el|*.fish|*.glsl|*.go|*.h|*.hh|*.hpp) ;;
+                *.htm|*.html|*.hxx|*.h++|*.inc|*.info|*.ini|*.log|*.lua) ;;
+                *.java|*.js|*.json|*.md|*.mjs|*.mk|*.ml|*.mli|*.nix|*.nu) ;;
+                *.odin|*.php|*.phtml|*.pl|*.po|*.ps1|*.py|*.rs|*.rst|*.rtf) ;;
+                *.scm|*.sh|*.sql|*.sum|*.s|*.tex|*.text|*.toml|*.ts|*.tsx) ;;
+                *.txt|*.vim|*.wat|*.xml|*.yaml|*.yml|*.zig|*.zsh) ;;
                 *) [[ $vscode == true ]] && exit || return 1 ;;
             esac ;;
     esac
