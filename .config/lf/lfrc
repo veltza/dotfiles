@@ -68,7 +68,7 @@ cmd on-cd &{{
     # Send window title and current working directory to terminal
     case "$PWD" in
         $HOME) title=$USER ;;
-        $HOME*) title="~${PWD#$HOME}" ;;
+        $HOME/*) title="~${PWD#$HOME}" ;;
         *) title=$PWD ;;
     esac
     title=$(printf '%s' "$title" | sed 's/\\/\\\\/g;s/"/\\"/g')
@@ -193,10 +193,10 @@ cmd open-config ${{
 
 cmd open-new-terminal &{{
     setsidcmd=$lf_user_setsid
-    for e in $(env | grep "^lf_"); do eval "unset ${e%%=*}"; done
-    unset f fs fx id lf LF_LEVEL
+    for e in $(env | grep "^lf_"); do unset "${e%%=*}"; done
+    unset f fs fv fx id lf LF_LEVEL
     if [ -n "${WSL_DISTRO_NAME:-}" ]; then
-        $setsidcmd wt -d "$PWD" &
+        $setsidcmd wt -d "$(wslpath -w "$PWD")" &
     elif [ -z "${WT_SESSION:-}" ]; then
         $setsidcmd st -d "$PWD" &
     fi
@@ -803,7 +803,7 @@ cmd download-file ${{
 }}
 
 cmd cd-media &{{
-    for dir in "/run/media/$USER/" "/media/$USER" "/run/media" "/media"; do
+    for dir in "/run/media/$USER" "/media/$USER" "/run/media" "/media"; do
         if [ -d "$dir" ]; then
             lf -remote "send $id cd \"$dir\""
             exit 0
@@ -818,7 +818,7 @@ cmd z %{{
         elif [ $# -eq 1 ] && [ -d "$1" ]; then
             target=$1
         else
-            target="$(zoxide query --exclude $PWD -- $@)"
+            target="$(zoxide query --exclude "$PWD" -- "$@")"
         fi
         lf -remote "send $id cd \"$target\""
     else
@@ -835,7 +835,7 @@ cmd zi ${{
     if [ $# -eq 1 ] && [ -d "$1" ]; then
         target=$1
     else
-        target="$(zoxide query -i --exclude $PWD -- $@)"
+        target="$(zoxide query -i --exclude "$PWD" -- "$@")"
         if [ $? -eq 1 ]; then
             lf -remote "send echo zoxide: no match found"
             exit
@@ -845,7 +845,7 @@ cmd zi ${{
 }}
 
 cmd ls !{{
-    echo "\nls $(pwd | sed "s|$HOME|~|")"
+    echo; echo "ls $(pwd | sed -E "s#^$HOME(/|\$)#~/#")"
     lscmd=$(command -v gls || echo ls)
     $lscmd --color=auto --group-directories-first -alFh
 }}
