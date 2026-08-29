@@ -33,3 +33,6 @@
 
 # Hyperlinks (OSC 8)
 --hyperlink-format=vscode
+
+# Display hyperlinks when searching directly in a file
+--with-filename
